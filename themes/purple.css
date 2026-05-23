@@ -1,0 +1,53 @@
+/* 主题：淡紫色技术风 */
+.theme-purple {
+  /* 段落 */
+  --p-style: margin:1.2em 0;line-height:1.8;color:#374151;font-size:16px;text-indent:2em;
+  /* 标题 */
+  --h1-style: margin:1.8em 0 1em;font-weight:700;color:#374151;font-size:1.8em;
+  --h2-style: margin:1.6em 0 0.8em;font-weight:600;color:#6b21a8;font-size:1.4em;padding-left:12px;border-left:4px solid #a855f7;
+  --h3-style: margin:1.4em 0 0.6em;font-weight:600;color:#4c1d95;font-size:1.2em;border-bottom:1px solid #e9d5ff;padding-bottom:5px;
+  --h4-style: margin:1.2em 0 0.5em;font-weight:600;color:#4c1d95;font-size:1.1em;
+  --h5-style: margin:1em 0 0.4em;font-weight:600;color:#4c1d95;font-size:1em;
+  --h6-style: margin:0.8em 0 0.3em;font-weight:600;color:#4c1d95;font-size:0.95em;
+  /* 引用 */
+  --blockquote-style: border-radius:6px;padding:16px 20px;margin:1.5em 0;color:#6b21a8;background:#f3e8ff;border-left:4px solid #a855f7;font-style:normal;
+  /* 代码 */
+  --code-style: background:#f3e8ff;padding:3px 8px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:14px;color:#7c3aed;
+  --pre-style: background:#1e1b4b;padding:16px;border-radius:8px;overflow-x:auto;margin:1.5em 0;font-family:Consolas,Monaco,monospace;font-size:14px;color:#c4b5fd;
+  /* 强调 */
+  --strong-style: font-weight:700;color:#6b21a8;
+  --a-style: color:#8b5cf6;text-decoration:none;border-bottom:1px solid #ddd6fe;
+  /* 列表 */
+  --ul-style: margin:1.2em 0;padding-left:1.8em;
+  --ol-style: margin:1.2em 0;padding-left:1.8em;
+  --li-style: margin:0.5em 0;line-height:1.7;color:#374151;
+  /* 分割线 */
+  --hr-style: border:none;border-top:1px dashed #ddd6fe;margin:2em 0;
+  /* 表格 */
+  --table-style: border-collapse:collapse;width:100%;margin:1.5em 0;
+  --th-style: border:1px solid #ddd6fe;padding:10px 14px;text-align:left;background:#faf5ff;color:#4c1d95;font-weight:600;
+  --td-style: border:1px solid #ddd6fe;padding:10px 14px;text-align:left;color:#374151;
+}
+
+/* 应用主题样式 */
+.theme-purple p { margin:1.2em 0;line-height:1.8;color:#374151;font-size:16px;text-indent:2em; }
+.theme-purple h1 { margin:1.8em 0 1em;font-weight:700;color:#374151;font-size:1.8em; }
+.theme-purple h2 { margin:1.6em 0 0.8em;font-weight:600;color:#6b21a8;font-size:1.4em;padding-left:12px;border-left:4px solid #a855f7; }
+.theme-purple h3 { margin:1.4em 0 0.6em;font-weight:600;color:#4c1d95;font-size:1.2em;border-bottom:1px solid #e9d5ff;padding-bottom:5px; }
+.theme-purple h4 { margin:1.2em 0 0.5em;font-weight:600;color:#4c1d95;font-size:1.1em; }
+.theme-purple h5 { margin:1em 0 0.4em;font-weight:600;color:#4c1d95;font-size:1em; }
+.theme-purple h6 { margin:0.8em 0 0.3em;font-weight:600;color:#4c1d95;font-size:0.95em; }
+.theme-purple blockquote { border-radius:6px;padding:16px 20px;margin:1.5em 0;color:#6b21a8;background:#f3e8ff;border-left:4px solid #a855f7;font-style:normal; }
+.theme-purple code { background:#f3e8ff;padding:3px 8px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:14px;color:#7c3aed; }
+.theme-purple pre { background:#1e1b4b;padding:16px;border-radius:8px;overflow-x:auto;margin:1.5em 0;font-family:Consolas,Monaco,monospace;font-size:14px;color:#c4b5fd; }
+.theme-purple pre code { background:none;padding:0;border-radius:0;color:inherit; }
+.theme-purple strong { font-weight:700;color:#6b21a8; }
+.theme-purple a { color:#8b5cf6;text-decoration:none;border-bottom:1px solid #ddd6fe; }
+.theme-purple ul { margin:1.2em 0;padding-left:1.8em; }
+.theme-purple ol { margin:1.2em 0;padding-left:1.8em; }
+.theme-purple li { margin:0.5em 0;line-height:1.7;color:#374151; }
+.theme-purple hr { border:none;border-top:1px dashed #ddd6fe;margin:2em 0; }
+.theme-purple table { border-collapse:collapse;width:100%;margin:1.5em 0; }
+.theme-purple th { border:1px solid #ddd6fe;padding:10px 14px;text-align:left;background:#faf5ff;color:#4c1d95;font-weight:600; }
+.theme-purple td { border:1px solid #ddd6fe;padding:10px 14px;text-align:left;color:#374151; }
+.theme-purple img { max-width:100%;height:auto;border-radius:4px;margin:1em 0; }
