@@ -13,5 +13,11 @@
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; style-src 'self' 'unsafe-inline'"
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["footer/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

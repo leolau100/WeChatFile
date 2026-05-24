@@ -20,6 +20,11 @@ const saveHeaderBtn = document.getElementById('saveHeaderBtn');
 const saveFooterBtn = document.getElementById('saveFooterBtn');
 const cancelHeaderBtn = document.getElementById('cancelHeaderBtn');
 const cancelFooterBtn = document.getElementById('cancelFooterBtn');
+const footerSelectBtn = document.getElementById('footerSelectBtn');
+const footerSelectModal = document.getElementById('footerSelectModal');
+const cancelFooterSelectBtn = document.getElementById('cancelFooterSelectBtn');
+const addFooterBtn = document.getElementById('addFooterBtn');
+const footerList = document.getElementById('footerList');
 
 let headerContent = '';
 let footerContent = '';
@@ -30,6 +35,7 @@ const STORAGE_KEY_HEADER = 'wechat_md_header';
 const STORAGE_KEY_FOOTER = 'wechat_md_footer';
 const STORAGE_KEY_CONTENT = 'wechat_md_content';
 const STORAGE_KEY_THEME = 'wechat_md_theme';
+const STORAGE_KEY_FOOTERS = 'wechat_md_footers';
 
 function showToast(message) {
   toast.textContent = message;
@@ -59,93 +65,102 @@ function countWords(text) {
   return text.replace(/\s/g, '').length;
 }
 
-async function loadThemeCSS() {
-  let cssContent = '';
-  const themes = ['yellow', 'purple', 'blue', 'orange', 'green'];
-  
-  // 基础样式
-  cssContent += `
-/* 预览内容基础样式 */
-body {
-  margin: 0;
-  padding: 15px;
-  color: #333;
-  font-size: 16px;
-  line-height: 1.8;
-}
-h1, h2, h3, h4, h5, h6 {
-  margin: 1em 0 0.5em;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-p {
-  margin: 0.8em 0;
-}
-img {
-  max-width: 100%;
-  height: auto;
-}
-a {
-  color: #576b95;
-  text-decoration: none;
-}
-ul, ol {
-  margin: 1em 0;
-  padding-left: 1.5em;
-}
-li {
-  margin: 0.3em 0;
-}
-table {
-  border-collapse: collapse;
-  width: 100%;
-  margin: 1em 0;
-}
-th, td {
-  border: 1px solid #e5e5e5;
-  padding: 8px 12px;
-  text-align: left;
-}
-th {
-  background: #f9f9f9;
-}
-`;
-  
-  // 加载所有主题CSS
-  for (const theme of themes) {
-    try {
-      const response = await fetch(chrome.runtime.getURL(`themes/${theme}.css`));
-      if (response.ok) {
-        cssContent += await response.text();
-      }
-    } catch (e) {
-      console.log('Theme CSS load failed:', theme, e);
+function getSavedFooters() {
+  try {
+    const footers = localStorage.getItem(STORAGE_KEY_FOOTERS);
+    if (footers) {
+      return JSON.parse(footers);
     }
+  } catch (e) {
+    console.log('Get saved footers failed:', e);
   }
-  
-  return cssContent;
+  return [];
 }
 
-let cachedThemeCSS = '';
+function saveFooterList(footers) {
+  try {
+    localStorage.setItem(STORAGE_KEY_FOOTERS, JSON.stringify(footers));
+  } catch (e) {
+    console.log('Save footers failed:', e);
+  }
+}
+
+function addCurrentFooterToCollection() {
+  if (!footerContent || footerContent.trim() === '') {
+    showToast('当前Footer为空，无法收藏');
+    return;
+  }
+  
+  const footers = getSavedFooters();
+  const name = prompt('请输入Footer名称：', `Footer ${footers.length + 1}`);
+  if (name) {
+    footers.push({
+      name: name,
+      content: footerContent,
+      id: Date.now()
+    });
+    saveFooterList(footers);
+    renderFooterList();
+    showToast('Footer收藏成功！');
+  }
+}
+
+function renderFooterList() {
+  const footers = getSavedFooters();
+  footerList.innerHTML = '';
+  
+  if (footers.length === 0) {
+    footerList.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">暂无收藏的Footer</div>';
+    return;
+  }
+  
+  footers.forEach((footer, index) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'border:1px solid #444;border-radius:8px;padding:12px;background:#2a2a2a;cursor:pointer;transition:all 0.2s;';
+    item.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <span style="color:#fff;font-weight:bold;">${footer.name}</span>
+        <button class="btn btn-danger" data-id="${footer.id}" style="padding:2px 8px;font-size:12px;">删除</button>
+      </div>
+      <div style="color:#888;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${footer.content.substring(0, 100)}...</div>
+    `;
+    
+    item.addEventListener('click', (e) => {
+      if (e.target.tagName !== 'BUTTON') {
+        footerContent = footer.content;
+        saveToStorage(STORAGE_KEY_FOOTER, footerContent);
+        updatePreview();
+        footerSelectModal.classList.remove('show');
+        showToast('Footer已应用！');
+      }
+    });
+    
+    const deleteBtn = item.querySelector('button');
+    deleteBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm('确定要删除这个Footer吗？')) {
+        const newFooters = footers.filter(f => f.id !== footer.id);
+        saveFooterList(newFooters);
+        renderFooterList();
+        showToast('Footer已删除');
+      }
+    });
+    
+    footerList.appendChild(item);
+  });
+}
 
 async function updatePreview() {
   const md = mdEditor.value;
   const html = marked.parse(md, currentTheme);
-  const fullHtml = '<div class="theme-' + currentTheme + '">' + html + '</div>';
   
-  // 加载CSS（只加载一次）
-  if (!cachedThemeCSS) {
-    cachedThemeCSS = await loadThemeCSS();
-  }
-  
-  // 构建完整的HTML文档
+  // 构建完整的HTML文档，只使用内联style
   const iframeHTML = `
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>${cachedThemeCSS}</style>
   <style>
     ::-webkit-scrollbar {
       width: 6px;
@@ -163,10 +178,12 @@ async function updatePreview() {
     }
   </style>
 </head>
-<body>
+<body style="margin:0;padding:15px;color:#333;font-size:16px;line-height:1.8;overflow-x:hidden;word-wrap:break-word;word-break:break-word;box-sizing:border-box;">
+  <section style="margin: 0; padding: 0;">
   ${headerContent}
-  ${fullHtml}
+  ${html}
   ${footerContent}
+  </section>
 </body>
 </html>
 `;
@@ -207,7 +224,7 @@ mdEditor.addEventListener('input', updatePreview);
 copyBtn.addEventListener('click', async () => {
   const md = mdEditor.value;
   const html = marked.parse(md, currentTheme);
-  const fullHtml = headerContent + '<div class="theme-' + currentTheme + '">' + html + '</div>' + footerContent;
+  const fullHtml = '<section style="margin: 0; padding: 0;">' + headerContent + html + footerContent + '</section>';
 
   try {
     const blob = new Blob([fullHtml], { type: 'text/html' });
@@ -298,17 +315,140 @@ document.querySelectorAll('.theme-card').forEach(card => {
   });
 });
 
+footerSelectBtn.addEventListener('click', () => {
+  renderFooterList();
+  footerSelectModal.classList.add('show');
+});
+
+cancelFooterSelectBtn.addEventListener('click', () => {
+  footerSelectModal.classList.remove('show');
+});
+
+addFooterBtn.addEventListener('click', addCurrentFooterToCollection);
+
+const resetBtn = document.getElementById('resetBtn');
+resetBtn.addEventListener('click', async () => {
+  if (confirm('确定要重置所有缓存吗？这将清除所有保存的内容、模板和Footer收藏。')) {
+    localStorage.clear();
+    await init();
+    showToast('缓存已重置！');
+  }
+});
+
 function setTheme(theme) {
   currentTheme = theme;
   saveToStorage(STORAGE_KEY_THEME, theme);
   updatePreview();
 }
 
+function parseFooterFile(content) {
+  let title = '';
+  let htmlContent = content;
+  
+  // 解析 front matter
+  const frontMatterMatch = content.match(/^---\s*\n([\s\S]*?)\n---\s*\n([\s\S]*)$/);
+  if (frontMatterMatch) {
+    const frontMatter = frontMatterMatch[1];
+    htmlContent = frontMatterMatch[2];
+    
+    // 提取 title
+    const titleMatch = frontMatter.match(/title:\s*["']?(.*?)["']?\s*$/m);
+    if (titleMatch) {
+      title = titleMatch[1];
+    }
+  }
+  
+  return { title, content: htmlContent.trim() };
+}
+
+async function loadFooterFromFile(fileName) {
+  try {
+    const response = await fetch(chrome.runtime.getURL(`footer/${fileName}`));
+    if (response.ok) {
+      const text = await response.text();
+      const { title, content } = parseFooterFile(text);
+      return {
+        name: title || fileName.replace(/\.(md|html)$/i, ''),
+        content: content,
+        id: Date.now() + Math.random()
+      };
+    }
+  } catch (e) {
+    console.log(`Load footer ${fileName} failed:`, e);
+  }
+  return null;
+}
+
+const defaultFooterHtml = `<section style="margin: 0; padding: 0;">
+<p style="margin: 30px 0 20px 0; border-top: 1px solid #eeeeee; font-size: 1px; line-height: 1px;">&nbsp;</p>
+
+<table style="width: 100%; border: none; margin: 0 0 20px 0; border-collapse: collapse;">
+  <tr>
+    <td style="width: 4px; background-color: #f7b500; border-radius: 2px; vertical-align: middle;"></td>
+    <td style="padding-left: 8px; font-size: 14px; font-weight: bold; color: #333333; line-height: 15px;">关于作者</td>
+  </tr>
+</table>
+
+<p style="margin: 0 0 0 12px; font-size: 13px; color: #555555; line-height: 1.6; text-align: justify;">
+  常驻硅谷与前沿技术一线的科技评论员，前硬核科技媒体主笔。深耕 AI 行业、智能硬件与数字化转型领域，致力于用剥离滤镜的客观视角，拆解科技演进背后的真实商业逻辑与技术真相。
+</p>
+
+<table style="width: 100%; border: none; margin: 25px 0 20px 0; border-collapse: collapse;">
+  <tr>
+    <td style="width: 4px; background-color: #f7b500; border-radius: 2px; vertical-align: middle;"></td>
+    <td style="padding-left: 8px; font-size: 14px; font-weight: bold; color: #333333; line-height: 15px;">关于本号</td>
+  </tr>
+</table>
+
+<p style="margin: 0 0 0 12px; font-size: 13px; color: #555555; line-height: 1.6; text-align: justify;">
+  不跟风，不造神。我们是一家专注科技趋势深度复盘、硬核产业拆解的原创内容基地。每周为您奉上最硬核的行业内幕观察与通俗易懂的技术底层剖析。
+</p>
+
+<table style="width: 100%; border: 1px solid #eeeeee; background-color: #fafafa; border-radius: 12px; margin: 25px 0 0 0; border-collapse: separate;">
+  <tr>
+    <td style="padding: 18px; vertical-align: top;">
+      <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #222222; font-weight: 600; line-height: 1.4;">
+        欢迎关注 "公众"
+      </h4>
+      <p style="margin: 0 0 4px 0; font-size: 12px; color: #666666; line-height: 1.4;">
+        在这里，换个姿势看懂科技未来。
+      </p>
+      <p style="margin: 0; font-size: 11px; color: #999999; line-height: 1.4;">
+        💡 长按右侧二维码，识别并关注本号
+      </p>
+    </td>
+    <td style="width: 92px; padding: 18px; vertical-align: middle;">
+      <div style="width: 84px; height: 84px; background-color: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 4px; display: table-cell; vertical-align: middle; text-align: center;">
+        <img src="" alt="二维码" style="width: 100%; height: 100%; object-fit: contain; display: block;" />
+      </div>
+    </td>
+  </tr>
+</table>
+</section>`;
+
 async function init() {
   const savedHeader = loadFromStorage(STORAGE_KEY_HEADER);
   const savedFooter = loadFromStorage(STORAGE_KEY_FOOTER);
   const savedContent = loadFromStorage(STORAGE_KEY_CONTENT);
   const savedTheme = loadFromStorage(STORAGE_KEY_THEME);
+
+  // 初始化默认Footer收藏
+  const savedFooters = getSavedFooters();
+  if (savedFooters.length === 0) {
+    const defaultFooters = [];
+    // 尝试从footer文件夹加载文件
+    const footerFile = await loadFooterFromFile('footeer1.md');
+    if (footerFile) {
+      defaultFooters.push(footerFile);
+    } else {
+      defaultFooters.push({
+        name: '关于作者、关于本号',
+        content: defaultFooterHtml,
+        id: 1
+      });
+    }
+    saveFooterList(defaultFooters);
+  }
 
   if (savedHeader) {
     headerContent = savedHeader;
@@ -319,7 +459,14 @@ async function init() {
   if (savedFooter) {
     footerContent = savedFooter;
   } else {
-    await loadTemplate(footerFile.value, false);
+    // 使用第一个收藏的footer
+    const footers = getSavedFooters();
+    if (footers.length > 0) {
+      footerContent = footers[0].content;
+    } else {
+      footerContent = defaultFooterHtml;
+    }
+    saveToStorage(STORAGE_KEY_FOOTER, footerContent);
   }
 
   if (savedContent) {

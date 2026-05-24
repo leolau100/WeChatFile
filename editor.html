@@ -265,7 +265,7 @@
     }
     .theme-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(7, 1fr);
       gap: 15px;
     }
     .theme-card {
@@ -413,6 +413,55 @@
       background: #86efac;
       border-radius: 4px;
     }
+
+    .cute-yellow-preview {
+      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
+      position: relative;
+    }
+    .cute-yellow-preview::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, #fcd34d 20%, #fbbf24 50%, #fcd34d 80%, transparent 100%);
+    }
+    .cute-yellow-preview::after {
+      content: '';
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      right: 10px;
+      height: 35px;
+      background: #fef3c7;
+      border-radius: 8px;
+      border: 1px solid #fbbf24;
+    }
+
+    .tech-purple-preview {
+      background: linear-gradient(180deg, #faf5ff 0%, #f7eeff 100%);
+      position: relative;
+    }
+    .tech-purple-preview::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent 0%, #c4b5fd 20%, #8b5cf6 50%, #c4b5fd 80%, transparent 100%);
+    }
+    .tech-purple-preview::after {
+      content: '';
+      position: absolute;
+      top: 30px;
+      left: 10px;
+      right: 10px;
+      height: 35px;
+      background: #1e1b4b;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
@@ -422,6 +471,8 @@
       <button class="btn btn-secondary" id="themeBtn">🎨 主题选择</button>
       <button class="btn btn-secondary" id="headerBtn">编辑顶部</button>
       <button class="btn btn-secondary" id="footerBtn">编辑底部</button>
+      <button class="btn btn-secondary" id="footerSelectBtn">📦 选择Footer</button>
+      <button class="btn btn-secondary" id="resetBtn">🔄 重置缓存</button>
       <button class="btn btn-primary" id="copyBtn">一键复制</button>
     </div>
   </div>
@@ -509,11 +560,11 @@
         <div class="theme-grid">
           <div class="theme-card" data-theme="yellow">
             <div class="theme-preview yellow-preview"></div>
-            <div class="theme-name">可爱小黄猫</div>
+            <div class="theme-name">可爱小黄猫(旧)</div>
           </div>
           <div class="theme-card" data-theme="purple">
             <div class="theme-preview purple-preview"></div>
-            <div class="theme-name">淡紫色技术风</div>
+            <div class="theme-name">淡紫色技术风(旧)</div>
           </div>
           <div class="theme-card" data-theme="blue">
             <div class="theme-preview blue-preview"></div>
@@ -527,10 +578,33 @@
             <div class="theme-preview green-preview"></div>
             <div class="theme-name">清新绿</div>
           </div>
+          <div class="theme-card" data-theme="cute-yellow">
+            <div class="theme-preview cute-yellow-preview"></div>
+            <div class="theme-name">可爱小黄猫</div>
+          </div>
+          <div class="theme-card" data-theme="tech-purple">
+            <div class="theme-preview tech-purple-preview"></div>
+            <div class="theme-name">淡紫色技术风</div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="cancelThemeBtn">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="footerSelectModal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <span>选择Footer模板</span>
+        <button class="btn btn-primary" id="addFooterBtn" style="padding: 4px 12px; font-size: 14px;">⭐ 收藏当前Footer</button>
+      </div>
+      <div class="modal-body">
+        <div id="footerList" style="display: grid; gap: 12px;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancelFooterSelectBtn">关闭</button>
       </div>
     </div>
   </div>
