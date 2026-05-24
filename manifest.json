@@ -16,7 +16,11 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["footer/*"],
+      "resources": [
+        "footer/*",
+        "themes/*.css",
+        "marked.min.js"
+      ],
       "matches": ["<all_urls>"]
     }
   ]

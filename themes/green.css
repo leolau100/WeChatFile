@@ -1,38 +1,7 @@
 /* 主题：清新绿 */
-.theme-green {
-  /* 段落 */
-  --p-style: margin:1.2em 0;line-height:1.8;color:#14532d;font-size:16px;
-  /* 标题 */
-  --h1-style: margin:1.8em 0 1em;font-weight:700;color:#14532d;font-size:1.8em;
-  --h2-style: margin:1.6em 0 0.8em;font-weight:600;color:#166534;font-size:1.4em;background:#22c55e;color:#ffffff;padding:10px 16px;border-radius:4px;text-align:center;
-  --h3-style: margin:1.4em 0 0.6em;font-weight:600;color:#15803d;font-size:1.2em;border-bottom:2px solid #86efac;padding-bottom:5px;
-  --h4-style: margin:1.2em 0 0.5em;font-weight:600;color:#15803d;font-size:1.1em;
-  --h5-style: margin:1em 0 0.4em;font-weight:600;color:#15803d;font-size:1em;
-  --h6-style: margin:0.8em 0 0.3em;font-weight:600;color:#15803d;font-size:0.95em;
-  /* 引用 */
-  --blockquote-style: border-radius:6px;padding:16px 20px;margin:1.5em 0;color:#166534;background:#dcfce7;font-style:normal;border-left:4px solid #22c55e;
-  /* 代码 */
-  --code-style: background:#dcfce7;padding:3px 8px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:14px;color:#15803d;
-  --pre-style: background:#14532d;padding:16px;border-radius:8px;overflow-x:auto;margin:1.5em 0;font-family:Consolas,Monaco,monospace;font-size:14px;color:#86efac;
-  /* 强调 */
-  --strong-style: font-weight:700;color:#166534;
-  --a-style: color:#22c55e;text-decoration:none;border-bottom:1px solid #86efac;
-  /* 列表 */
-  --ul-style: margin:1.2em 0;padding-left:1.8em;
-  --ol-style: margin:1.2em 0;padding-left:1.8em;
-  --li-style: margin:0.5em 0;line-height:1.7;color:#14532d;
-  /* 分割线 */
-  --hr-style: border:none;border-top:2px solid #86efac;margin:2em 0;
-  /* 表格 */
-  --table-style: border-collapse:collapse;width:100%;margin:1.5em 0;
-  --th-style: border:1px solid #86efac;padding:10px 14px;text-align:left;background:#f0fdf4;color:#15803d;font-weight:600;
-  --td-style: border:1px solid #86efac;padding:10px 14px;text-align:left;color:#14532d;
-}
-
-/* 应用主题样式 */
 .theme-green p { margin:1.2em 0;line-height:1.8;color:#14532d;font-size:16px; }
 .theme-green h1 { margin:1.8em 0 1em;font-weight:700;color:#14532d;font-size:1.8em; }
-.theme-green h2 { margin:1.6em 0 0.8em;font-weight:600;color:#166534;font-size:1.4em;background:#22c55e;color:#ffffff;padding:10px 16px;border-radius:4px;text-align:center; }
+.theme-green h2 { margin:1.6em 0 0.8em;font-weight:600;font-size:1.4em;background:#22c55e;color:#ffffff;padding:10px 16px;border-radius:4px;text-align:center; }
 .theme-green h3 { margin:1.4em 0 0.6em;font-weight:600;color:#15803d;font-size:1.2em;border-bottom:2px solid #86efac;padding-bottom:5px; }
 .theme-green h4 { margin:1.2em 0 0.5em;font-weight:600;color:#15803d;font-size:1.1em; }
 .theme-green h5 { margin:1em 0 0.4em;font-weight:600;color:#15803d;font-size:1em; }

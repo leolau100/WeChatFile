@@ -1,35 +1,4 @@
 /* 主题：橙色温暖 */
-.theme-orange {
-  /* 段落 */
-  --p-style: margin:1.2em 0;line-height:1.8;color:#451a03;font-size:16px;
-  /* 标题 */
-  --h1-style: margin:1.8em 0 1em;font-weight:700;color:#451a03;font-size:1.8em;
-  --h2-style: margin:1.6em 0 0.8em;font-weight:600;color:#ea580c;font-size:1.4em;padding-left:12px;border-left:4px solid #fb923c;
-  --h3-style: margin:1.4em 0 0.6em;font-weight:600;color:#c2410c;font-size:1.2em;
-  --h4-style: margin:1.2em 0 0.5em;font-weight:600;color:#c2410c;font-size:1.1em;
-  --h5-style: margin:1em 0 0.4em;font-weight:600;color:#c2410c;font-size:1em;
-  --h6-style: margin:0.8em 0 0.3em;font-weight:600;color:#c2410c;font-size:0.95em;
-  /* 引用 */
-  --blockquote-style: border-radius:8px;padding:18px 24px;margin:1.5em 0;color:#9a3412;background:#ffedd5;border-left:4px solid #fb923c;font-style:normal;
-  /* 代码 */
-  --code-style: background:#ffedd5;padding:3px 8px;border-radius:4px;font-family:Consolas,Monaco,monospace;font-size:14px;color:#ea580c;
-  --pre-style: background:#431407;padding:16px;border-radius:8px;overflow-x:auto;margin:1.5em 0;font-family:Consolas,Monaco,monospace;font-size:14px;color:#fed7aa;
-  /* 强调 */
-  --strong-style: font-weight:700;color:#ea580c;
-  --a-style: color:#fb923c;text-decoration:none;border-bottom:1px solid #fdba74;
-  /* 列表 */
-  --ul-style: margin:1.2em 0;padding-left:1.8em;
-  --ol-style: margin:1.2em 0;padding-left:1.8em;
-  --li-style: margin:0.5em 0;line-height:1.7;color:#451a03;
-  /* 分割线 */
-  --hr-style: border:none;border-top:2px solid #fdba74;margin:2em 0;
-  /* 表格 */
-  --table-style: border-collapse:collapse;width:100%;margin:1.5em 0;
-  --th-style: border:1px solid #fdba74;padding:10px 14px;text-align:left;background:#fff7ed;color:#c2410c;font-weight:600;
-  --td-style: border:1px solid #fdba74;padding:10px 14px;text-align:left;color:#451a03;
-}
-
-/* 应用主题样式 */
 .theme-orange p { margin:1.2em 0;line-height:1.8;color:#451a03;font-size:16px; }
 .theme-orange h1 { margin:1.8em 0 1em;font-weight:700;color:#451a03;font-size:1.8em; }
 .theme-orange h2 { margin:1.6em 0 0.8em;font-weight:600;color:#ea580c;font-size:1.4em;padding-left:12px;border-left:4px solid #fb923c; }

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>微信文章编辑器 - Markdown</title>
-  <link rel="stylesheet" href="themes/index.css">
   <style>
     * {
       margin: 0;
@@ -260,208 +259,216 @@
       font-size: 12px;
     }
 
+    /* ===== 主题弹窗样式 ===== */
+    .theme-modal .modal-content {
+      max-width: 760px;
+      width: 96%;
+    }
     .theme-modal .modal-body {
-      padding: 20px;
+      padding: 16px 20px 20px;
     }
     .theme-grid {
       display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 15px;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
     }
     .theme-card {
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 10px;
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: all 0.2s ease;
       border: 2px solid transparent;
+      background: #1a1a1a;
     }
     .theme-card:hover {
       transform: translateY(-2px);
       border-color: #07c160;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .theme-card.active {
+      border-color: #07c160;
+      box-shadow: 0 0 0 1px #07c160;
     }
     .theme-preview {
-      height: 80px;
+      height: 90px;
       position: relative;
+      overflow: hidden;
     }
     .theme-name {
       text-align: center;
-      padding: 10px;
-      background: #f5f5f5;
+      padding: 8px 6px;
+      background: #222;
       font-size: 12px;
+      color: #aaa;
+      white-space: normal;
+      word-break: break-all;
+      line-height: 1.4;
+      min-height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .theme-card.active .theme-name {
+      color: #07c160;
+    }
+
+    /* ===== 模版管理弹窗样式 ===== */
+    .tpl-modal .modal-content {
+      max-width: 680px;
+      width: 95%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .tpl-modal .modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+    }
+    .tpl-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .tpl-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      border-bottom: 1px solid #3a3a3a;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .tpl-item:hover { background: #333; }
+    .tpl-item.active { background: #1a3a2a; }
+    .tpl-item-name {
+      flex: 1;
+      font-size: 14px;
+      color: #ddd;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .tpl-item.active .tpl-item-name { color: #07c160; font-weight: 600; }
+    .tpl-item-type {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: #444;
+      color: #888;
+      flex-shrink: 0;
+    }
+    .tpl-item-type.md { background: #1a3a5a; color: #60a5fa; }
+    .tpl-item-type.html { background: #3a2a1a; color: #fb923c; }
+    .tpl-item-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .tpl-item-actions button {
+      padding: 3px 8px;
+      font-size: 12px;
+      border: none;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+    .tpl-editor-area {
+      padding: 16px;
+      border-top: 1px solid #3a3a3a;
+      background: #252526;
+    }
+    .tpl-editor-area label {
+      display: block;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .tpl-editor-area input[type="text"] {
+      width: 100%;
+      background: #1e1e1e;
+      border: 1px solid #404040;
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .tpl-editor-area textarea {
+      width: 100%;
+      height: 180px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: 1px solid #404040;
+      border-radius: 4px;
+      padding: 10px;
+      font-family: 'Consolas', monospace;
+      font-size: 13px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .tpl-editor-hint {
+      font-size: 11px;
       color: #666;
+      margin-top: 6px;
     }
 
-    .yellow-preview {
-      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
-      position: relative;
-    }
-    .yellow-preview::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
-      height: 2px;
-      background: #d97706;
-    }
-    .yellow-preview::after {
-      content: '';
-      position: absolute;
-      top: 30px;
-      left: 10px;
-      right: 15px;
-      height: 35px;
-      background: #fef3c7;
-      border-radius: 8px;
-      border: 2px solid #f59e0b;
-    }
+    /* 各主题预览色块 */
+    .prev-blue { background: linear-gradient(135deg, #f0f4ff 0%, #e0e7ff 60%, #c7d2fe 100%); }
+    .prev-blue::before { content:''; position:absolute; top:10px; left:8px; width:4px; height:22px; background:#6366f1; border-radius:2px; }
+    .prev-blue::after { content:''; position:absolute; top:10px; left:18px; right:8px; height:8px; background:#4f46e5; border-radius:2px; opacity:0.7; }
 
-    .purple-preview {
-      background: linear-gradient(180deg, #faf5ff 0%, #f3e8ff 100%);
-      position: relative;
-    }
-    .purple-preview::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 5px;
-      width: 3px;
-      height: 20px;
-      background: #a855f7;
-    }
-    .purple-preview::after {
-      content: '';
-      position: absolute;
-      top: 35px;
-      left: 10px;
-      right: 10px;
-      height: 30px;
-      background: #f3e8ff;
-      border-radius: 6px;
-    }
+    .prev-orange { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 60%, #fed7aa 100%); }
+    .prev-orange::before { content:''; position:absolute; top:8px; left:8px; width:4px; height:22px; background:#fb923c; border-radius:2px; }
+    .prev-orange::after { content:''; position:absolute; top:8px; left:18px; right:8px; height:8px; background:#ea580c; border-radius:2px; opacity:0.7; }
 
-    .blue-preview {
-      background: linear-gradient(180deg, #f0f4ff 0%, #e0e7ff 100%);
-      position: relative;
-    }
-    .blue-preview::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 5px;
-      width: 4px;
-      height: 25px;
-      background: #8b5cf6;
-    }
-    .blue-preview::after {
-      content: '';
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      height: 25px;
-      background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
-      border-radius: 12px;
-    }
+    .prev-green { background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 60%, #bbf7d0 100%); }
+    .prev-green::before { content:''; position:absolute; top:8px; left:8px; right:8px; height:18px; background:#22c55e; border-radius:3px; }
+    .prev-green::after { content:''; position:absolute; top:34px; left:8px; right:8px; height:12px; background:#86efac; border-radius:3px; }
 
-    .orange-preview {
-      background: linear-gradient(180deg, #fff7ed 0%, #ffedd5 100%);
-      position: relative;
-    }
-    .orange-preview::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 8px;
-      width: 6px;
-      height: 6px;
-      background: #ea580c;
-      border-radius: 50%;
-    }
-    .orange-preview::after {
-      content: '';
-      position: absolute;
-      top: 30px;
-      left: 8px;
-      width: 3px;
-      height: 35px;
-      background: #fb923c;
-    }
+    .prev-cute-yellow { background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); }
+    .prev-cute-yellow::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#fbbf24,transparent); }
+    .prev-cute-yellow::after { content:''; position:absolute; top:14px; left:8px; right:8px; height:30px; background:#fef3c7; border-radius:6px; border:1px solid #fbbf24; }
 
-    .green-preview {
-      background: linear-gradient(180deg, #f0fdf4 0%, #dcfce7 100%);
-      position: relative;
-    }
-    .green-preview::before {
-      content: '';
-      position: absolute;
-      top: 15px;
-      left: 10px;
-      right: 10px;
-      height: 20px;
-      background: #22c55e;
-      border-radius: 4px;
-    }
-    .green-preview::after {
-      content: '';
-      position: absolute;
-      top: 50px;
-      left: 10px;
-      right: 10px;
-      height: 15px;
-      background: #86efac;
-      border-radius: 4px;
-    }
+    .prev-tech-purple { background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%); }
+    .prev-tech-purple::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,#8b5cf6,transparent); }
+    .prev-tech-purple::after { content:''; position:absolute; top:14px; left:8px; right:8px; height:30px; background:#1e1b4b; border-radius:6px; }
 
-    .cute-yellow-preview {
-      background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
-      position: relative;
-    }
-    .cute-yellow-preview::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent 0%, #fcd34d 20%, #fbbf24 50%, #fcd34d 80%, transparent 100%);
-    }
-    .cute-yellow-preview::after {
-      content: '';
-      position: absolute;
-      top: 30px;
-      left: 10px;
-      right: 10px;
-      height: 35px;
-      background: #fef3c7;
-      border-radius: 8px;
-      border: 1px solid #fbbf24;
-    }
+    .prev-warm-orange { background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%); }
+    .prev-warm-orange::before { content:''; position:absolute; top:8px; left:6px; width:5px; height:50px; background:linear-gradient(180deg,#f97316,#c2410c); border-radius:3px; }
+    .prev-warm-orange::after { content:''; position:absolute; top:12px; left:18px; right:8px; height:18px; background:rgba(255,237,213,0.8); border-left:3px solid #f97316; border-radius:0 6px 6px 0; }
 
-    .tech-purple-preview {
-      background: linear-gradient(180deg, #faf5ff 0%, #f7eeff 100%);
-      position: relative;
-    }
-    .tech-purple-preview::before {
-      content: '';
-      position: absolute;
-      top: 10px;
-      left: 0;
-      right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent 0%, #c4b5fd 20%, #8b5cf6 50%, #c4b5fd 80%, transparent 100%);
-    }
-    .tech-purple-preview::after {
-      content: '';
-      position: absolute;
-      top: 30px;
-      left: 10px;
-      right: 10px;
-      height: 35px;
-      background: #1e1b4b;
-      border-radius: 8px;
-    }
+    .prev-elegant-purple { background: linear-gradient(135deg, #faf5ff 0%, #ede9fe 100%); }
+    .prev-elegant-purple::before { content:''; position:absolute; top:8px; left:8px; right:8px; height:3px; background:linear-gradient(90deg,#8b5cf6,#a78bfa,#c4b5fd); border-radius:2px; }
+    .prev-elegant-purple::after { content:''; position:absolute; top:20px; left:8px; right:8px; height:28px; background:linear-gradient(90deg,rgba(139,92,246,0.08),transparent); border-left:3px solid #8b5cf6; border-radius:0 4px 4px 0; }
+
+    .prev-geek-tech { background: #ffffff; border:1px solid #d0d7de; }
+    .prev-geek-tech::before { content:'# '; position:absolute; top:8px; left:8px; color:#0969da; font-family:monospace; font-size:13px; font-weight:700; }
+    .prev-geek-tech::after { content:''; position:absolute; top:28px; left:8px; right:8px; height:1px; background:#d0d7de; }
+
+    .prev-pop-art { background: #ffffff; }
+    .prev-pop-art::before { content:''; position:absolute; top:10px; left:8px; width:14px; height:14px; background:#000; box-shadow:3px 3px 0 #ffd43b; }
+    .prev-pop-art::after { content:''; position:absolute; top:10px; left:30px; right:8px; height:6px; background:#000; }
+
+    .prev-minimal-blue { background: #ffffff; }
+    .prev-minimal-blue::before { content:''; position:absolute; top:8px; left:8px; width:3px; height:20px; background:#1a6dfc; border-radius:2px; }
+    .prev-minimal-blue::after { content:''; position:absolute; top:8px; left:18px; right:8px; height:8px; background:#1a6dfc; border-radius:2px; opacity:0.6; }
+
+    .prev-bw-minimal { background: #ffffff; background-image:linear-gradient(90deg,rgba(50,0,0,0.03) 0%,rgba(255,255,255,0) 11.49%),linear-gradient(360deg,rgba(50,0,0,0.04) 0%,rgba(255,255,255,0) 12.16%); background-size:20px 20px,20px 20px; }
+    .prev-bw-minimal::before { content:''; position:absolute; top:8px; left:8px; right:8px; height:20px; background:#000; }
+    .prev-bw-minimal::after { content:''; position:absolute; top:36px; left:8px; right:8px; height:2px; background:#000; }
+
+    .prev-classic-yellow { background: #ffffff; }
+    .prev-classic-yellow::before { content:''; position:absolute; top:8px; left:8px; right:8px; height:4px; background:#f6c629; border-radius:2px; }
+    .prev-classic-yellow::after { content:''; position:absolute; top:20px; left:8px; right:8px; height:20px; background:rgba(249,199,37,0.15); border:1px solid #f9c725; border-radius:4px; }
+
+    .prev-neon { background: #f8f8f8; background-image:linear-gradient(90deg,rgba(50,0,0,0.03) 0%,rgba(255,255,255,0) 11.49%),linear-gradient(360deg,rgba(50,0,0,0.04) 0%,rgba(255,255,255,0) 12.16%); background-size:20px 20px,20px 20px; }
+    .prev-neon::before { content:'H1'; position:absolute; top:8px; left:8px; padding:2px 6px; background:linear-gradient(135deg,#ff0055,#d400ff); color:#fff; font-size:10px; font-weight:900; box-shadow:0 0 6px rgba(255,0,85,0.7); }
+    .prev-neon::after { content:''; position:absolute; top:36px; left:8px; right:8px; height:2px; background:rgba(255,61,113,0.3); }
+
+    .prev-ink-wash { background: #faf8f3; }
+    .prev-ink-wash::before { content:''; position:absolute; top:8px; left:8px; right:8px; height:3px; background:linear-gradient(90deg,transparent,#8b4513,transparent); }
+    .prev-ink-wash::after { content:''; position:absolute; top:20px; left:8px; right:8px; height:28px; background:rgba(200,134,10,0.06); border-left:3px solid #c8860a; border-radius:0 4px 4px 0; }
   </style>
 </head>
 <body>
@@ -469,9 +476,8 @@
     <h1>📝 微信文章编辑器</h1>
     <div class="header-actions">
       <button class="btn btn-secondary" id="themeBtn">🎨 主题选择</button>
-      <button class="btn btn-secondary" id="headerBtn">编辑顶部</button>
-      <button class="btn btn-secondary" id="footerBtn">编辑底部</button>
-      <button class="btn btn-secondary" id="footerSelectBtn">📦 选择Footer</button>
+      <button class="btn btn-secondary" id="headerTplBtn">📋 顶部模版</button>
+      <button class="btn btn-secondary" id="footerTplBtn">📋 底部模版</button>
       <button class="btn btn-secondary" id="resetBtn">🔄 重置缓存</button>
       <button class="btn btn-primary" id="copyBtn">一键复制</button>
     </div>
@@ -507,19 +513,6 @@
     </div>
   </div>
 
-  <div class="config-bar">
-    <div class="config-item">
-      <label>顶部模板:</label>
-      <input type="text" id="headerFile" value="header.html">
-      <button id="loadHeaderBtn">加载</button>
-    </div>
-    <div class="config-item">
-      <label>底部模板:</label>
-      <input type="text" id="footerFile" value="footer.html">
-      <button id="loadFooterBtn">加载</button>
-    </div>
-  </div>
-
   <div class="footer">
     <span>提示: 输入Markdown语法，右侧实时预览。点击"一键复制"后可粘贴到微信公众号编辑器</span>
     <span>v2.0</span>
@@ -527,64 +520,120 @@
 
   <div class="toast" id="toast">复制成功！</div>
 
-  <div class="modal" id="headerModal">
+  <!-- 顶部模版管理弹窗 -->
+  <div class="modal tpl-modal" id="headerTplModal">
     <div class="modal-content">
-      <div class="modal-header">编辑顶部模板 (HTML)</div>
+      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>📋 顶部模版管理</span>
+        <button class="btn btn-primary" id="addHeaderTplBtn" style="padding:4px 12px;font-size:13px;">+ 新建</button>
+      </div>
       <div class="modal-body">
-        <textarea id="headerEditor" placeholder="输入HTML内容..."></textarea>
+        <div class="tpl-list" id="headerTplList"></div>
+        <div class="tpl-editor-area" id="headerTplEditor" style="display:none;">
+          <label>模版名称</label>
+          <input type="text" id="headerTplName" placeholder="输入模版名称...">
+          <label>内容（支持 HTML 或 Markdown）</label>
+          <textarea id="headerTplContent" placeholder="输入 HTML 或 Markdown 内容...&#10;&#10;以 < 开头视为 HTML，直接渲染&#10;否则按 Markdown 解析并应用当前主题样式"></textarea>
+          <div class="tpl-editor-hint">💡 以 &lt; 开头视为 HTML 直接渲染；否则按 Markdown 解析并应用当前主题样式</div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-primary" id="saveHeaderTplBtn">保存</button>
+            <button class="btn btn-secondary" id="cancelHeaderTplEditBtn">取消</button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancelHeaderBtn">取消</button>
-        <button class="btn btn-primary" id="saveHeaderBtn">保存</button>
+        <button class="btn btn-secondary" id="closeHeaderTplBtn">关闭</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="footerModal">
+  <!-- 底部模版管理弹窗 -->
+  <div class="modal tpl-modal" id="footerTplModal">
     <div class="modal-content">
-      <div class="modal-header">编辑底部模板 (HTML)</div>
+      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>📋 底部模版管理</span>
+        <button class="btn btn-primary" id="addFooterTplBtn" style="padding:4px 12px;font-size:13px;">+ 新建</button>
+      </div>
       <div class="modal-body">
-        <textarea id="footerEditor" placeholder="输入HTML内容..."></textarea>
+        <div class="tpl-list" id="footerTplList"></div>
+        <div class="tpl-editor-area" id="footerTplEditor" style="display:none;">
+          <label>模版名称</label>
+          <input type="text" id="footerTplName" placeholder="输入模版名称...">
+          <label>内容（支持 HTML 或 Markdown）</label>
+          <textarea id="footerTplContent" placeholder="输入 HTML 或 Markdown 内容...&#10;&#10;以 < 开头视为 HTML，直接渲染&#10;否则按 Markdown 解析并应用当前主题样式"></textarea>
+          <div class="tpl-editor-hint">💡 以 &lt; 开头视为 HTML 直接渲染；否则按 Markdown 解析并应用当前主题样式</div>
+          <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn btn-primary" id="saveFooterTplBtn">保存</button>
+            <button class="btn btn-secondary" id="cancelFooterTplEditBtn">取消</button>
+          </div>
+        </div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancelFooterBtn">取消</button>
-        <button class="btn btn-primary" id="saveFooterBtn">保存</button>
+        <button class="btn btn-secondary" id="closeFooterTplBtn">关闭</button>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="themeModal">
-    <div class="modal-content theme-modal">
-      <div class="modal-header">选择主题</div>
+  <div class="modal theme-modal" id="themeModal">
+    <div class="modal-content">
+      <div class="modal-header">🎨 选择主题</div>
       <div class="modal-body">
         <div class="theme-grid">
-          <div class="theme-card" data-theme="yellow">
-            <div class="theme-preview yellow-preview"></div>
-            <div class="theme-name">可爱小黄猫(旧)</div>
-          </div>
-          <div class="theme-card" data-theme="purple">
-            <div class="theme-preview purple-preview"></div>
-            <div class="theme-name">淡紫色技术风(旧)</div>
-          </div>
           <div class="theme-card" data-theme="blue">
-            <div class="theme-preview blue-preview"></div>
+            <div class="theme-preview prev-blue"></div>
             <div class="theme-name">紫蓝渐变</div>
           </div>
           <div class="theme-card" data-theme="orange">
-            <div class="theme-preview orange-preview"></div>
+            <div class="theme-preview prev-orange"></div>
             <div class="theme-name">橙色温暖</div>
           </div>
           <div class="theme-card" data-theme="green">
-            <div class="theme-preview green-preview"></div>
+            <div class="theme-preview prev-green"></div>
             <div class="theme-name">清新绿</div>
           </div>
           <div class="theme-card" data-theme="cute-yellow">
-            <div class="theme-preview cute-yellow-preview"></div>
+            <div class="theme-preview prev-cute-yellow"></div>
             <div class="theme-name">可爱小黄猫</div>
           </div>
           <div class="theme-card" data-theme="tech-purple">
-            <div class="theme-preview tech-purple-preview"></div>
-            <div class="theme-name">淡紫色技术风</div>
+            <div class="theme-preview prev-tech-purple"></div>
+            <div class="theme-name">淡紫技术风</div>
+          </div>
+          <div class="theme-card" data-theme="warm-orange">
+            <div class="theme-preview prev-warm-orange"></div>
+            <div class="theme-name">温暖活力风</div>
+          </div>
+          <div class="theme-card" data-theme="elegant-purple">
+            <div class="theme-preview prev-elegant-purple"></div>
+            <div class="theme-name">优雅紫色风</div>
+          </div>
+          <div class="theme-card" data-theme="geek-tech">
+            <div class="theme-preview prev-geek-tech"></div>
+            <div class="theme-name">极客技术风</div>
+          </div>
+          <div class="theme-card" data-theme="pop-art">
+            <div class="theme-preview prev-pop-art"></div>
+            <div class="theme-name">波普撞色风</div>
+          </div>
+          <div class="theme-card" data-theme="minimal-blue">
+            <div class="theme-preview prev-minimal-blue"></div>
+            <div class="theme-name">简约蓝色系</div>
+          </div>
+          <div class="theme-card" data-theme="bw-minimal">
+            <div class="theme-preview prev-bw-minimal"></div>
+            <div class="theme-name">黑白简约风</div>
+          </div>
+          <div class="theme-card" data-theme="classic-yellow">
+            <div class="theme-preview prev-classic-yellow"></div>
+            <div class="theme-name">经典黄色系</div>
+          </div>
+          <div class="theme-card" data-theme="neon">
+            <div class="theme-preview prev-neon"></div>
+            <div class="theme-name">霓虹色风格</div>
+          </div>
+          <div class="theme-card" data-theme="ink-wash">
+            <div class="theme-preview prev-ink-wash"></div>
+            <div class="theme-name">水墨丹青</div>
           </div>
         </div>
       </div>
@@ -594,20 +643,6 @@
     </div>
   </div>
 
-  <div class="modal" id="footerSelectModal">
-    <div class="modal-content" style="max-width: 700px;">
-      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
-        <span>选择Footer模板</span>
-        <button class="btn btn-primary" id="addFooterBtn" style="padding: 4px 12px; font-size: 14px;">⭐ 收藏当前Footer</button>
-      </div>
-      <div class="modal-body">
-        <div id="footerList" style="display: grid; gap: 12px;"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="cancelFooterSelectBtn">关闭</button>
-      </div>
-    </div>
-  </div>
 
   <script src="marked.min.js"></script>
   <script src="editor.js"></script>
