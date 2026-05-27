@@ -144,56 +144,128 @@ async function getThemeCss(theme) {
 }
 
 // ===== Preview =====
+// 缓存主题 CSS 文本，避免每次重复 fetch
+const themeCssCache = {};
+async function getThemeCssText(theme) {
+  if (themeCssCache[theme] !== undefined) return themeCssCache[theme];
+  const text = await getThemeCss(theme);
+  themeCssCache[theme] = text;
+  return text;
+}
+
+/**
+ * 两步渲染：
+ * 1. 先把带 class 的 HTML 写入 iframe，让浏览器完整解析 CSS
+ * 2. 解析主题 CSS 规则，把规则直接内联到 DOM，伪元素转真实节点
+ * 3. 把内联后的 HTML 重新写入 iframe，预览即最终效果
+ */
 async function updatePreview() {
   const md = mdEditor.value;
   const bodyHtml = marked.parse(md);
-  const themeCss = await getThemeCss(currentTheme);
+  const themeCssText = await getThemeCssText(currentTheme);
 
   const headerHtml = renderTemplate(getActiveHeaderContent(), currentTheme);
   const footerHtml = renderTemplate(getActiveFooterContent(), currentTheme);
 
-  const iframeHTML = `<!DOCTYPE html>
+  // 第一步：写入带 class 的 HTML（用于 CSS 解析）
+  const rawHtml = `<!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <style>
-    ::-webkit-scrollbar{width:6px;height:6px}
-    ::-webkit-scrollbar-track{background:#f5f5f5}
-    ::-webkit-scrollbar-thumb{background:#ccc;border-radius:3px}
-    body{margin:0;padding:15px;overflow-x:hidden;word-wrap:break-word;word-break:break-word;box-sizing:border-box}
-    p{margin:1em 0;line-height:1.8;color:#333;font-size:16px}
-    h1,h2,h3,h4,h5,h6{margin:1.2em 0 0.6em;font-weight:600;line-height:1.4}
-    blockquote{border-left:4px solid #ddd;padding:8px 16px;margin:1em 0;color:#666;background:#f9f9f9}
-    code{background:rgba(135,131,120,.15);padding:2px 6px;border-radius:3px;font-family:Consolas,Monaco,monospace;font-size:14px}
-    pre{background:#1e1e1e;padding:16px;border-radius:6px;overflow-x:auto;margin:1.5em 0}
-    pre code{background:none;padding:0;color:#d4d4d4}
-    table{border-collapse:collapse;width:100%;margin:1.5em 0}
-    th,td{border:1px solid #e5e5e5;padding:8px 12px;text-align:left}
-    th{background:#f5f5f5;font-weight:600}
-    hr{border:none;border-top:1px solid #e5e5e5;margin:2em 0}
-    ul,ol{margin:1em 0;padding-left:1.8em}
-    li{margin:.3em 0;line-height:1.7}
-    img{max-width:100%;height:auto}
-    a{color:#576b95;text-decoration:none}
-    strong{font-weight:700}
-    del{text-decoration:line-through;color:#999}
-    ${themeCss}
-  </style>
+<head><meta charset="UTF-8">
+<style>
+  body{margin:0;padding:15px;overflow-x:hidden;word-wrap:break-word;word-break:break-word;box-sizing:border-box}
+  ${themeCssText}
+</style>
 </head>
 <body>
-  <section style="margin:0;padding:0;">
-    ${headerHtml}
-    <div class="theme-${currentTheme}">${bodyHtml}</div>
-    ${footerHtml}
+  <section style="margin:0;padding:0;width:100%;box-sizing:border-box;">
+    <div data-tpl="header">${headerHtml}</div>
+    <div data-tpl="body" class="theme-${currentTheme}">${bodyHtml}</div>
+    <div data-tpl="footer">${footerHtml}</div>
   </section>
-</body>
-</html>`;
+</body></html>`;
 
   const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-  doc.open(); doc.write(iframeHTML); doc.close();
+  doc.open(); doc.write(rawHtml); doc.close();
 
-  wordCount.textContent = '字数: ' + countWords(md);
+  // 第二步：解析规则并内联，然后重写 iframe
+  await new Promise(r => setTimeout(r, 30)); // 等 CSS 解析完成
+  const inlined = inlineThemeToSection(doc, themeCssText);
+
+  const finalHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8">
+<style>
+  ::-webkit-scrollbar{width:5px}
+  ::-webkit-scrollbar-thumb{background:#ddd;border-radius:3px}
+  body{margin:0;padding:15px;overflow-x:hidden;word-wrap:break-word;word-break:break-word;box-sizing:border-box}
+</style>
+</head>
+<body>${inlined}</body></html>`;
+
+  doc.open(); doc.write(finalHtml); doc.close();
+
+  // 高度自适应
+  setTimeout(() => {
+    try {
+      const h = previewIframe.contentDocument.body.scrollHeight;
+      previewIframe.style.height = Math.max(h + 20, 600) + 'px';
+    } catch(e) {}
+  }, 60);
+
+  wordCount.textContent = countWords(md) + ' 字';
   saveToStorage(STORAGE_KEY_CONTENT, md);
+}
+
+/**
+ * 从已渲染的 doc 中提取 section，把主题规则内联进去，返回内联后的 outerHTML。
+ * - data-tpl="body"：正文，始终应用主题内联
+ * - data-tpl="header/footer"：
+ *     - 内部有 .theme-xxx（Markdown 渲染的）→ 对该子区域应用主题内联
+ *     - 纯 HTML 模版 → 原样保留，不修改任何 style
+ */
+function inlineThemeToSection(doc, themeCssText) {
+  const section = doc.body.querySelector('section');
+  if (!section) return doc.body.innerHTML;
+
+  const rules = parseThemeCssRules(themeCssText);
+  const clone = section.cloneNode(true);
+  doc.body.appendChild(clone);
+
+  // 对指定容器应用主题内联并清理 class
+  function inlineContainer(container) {
+    applyThemeRulesToDom(container, rules, doc);
+    container.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
+    container.removeAttribute('class');
+  }
+
+  // 正文区域：始终内联
+  const bodyDiv = clone.querySelector('[data-tpl="body"]');
+  if (bodyDiv) {
+    inlineContainer(bodyDiv);
+    bodyDiv.removeAttribute('data-tpl');
+  }
+
+  // header / footer 区域：只有 Markdown 渲染的才内联
+  ['header', 'footer'].forEach(tplType => {
+    const tplDiv = clone.querySelector(`[data-tpl="${tplType}"]`);
+    if (!tplDiv) return;
+    // 检查是否包含主题 class（Markdown 渲染时会包裹 <div class="theme-xxx">）
+    const themeChild = tplDiv.querySelector('[class^="theme-"]');
+    if (themeChild) {
+      // Markdown 模版：对整个 tplDiv 内联主题样式
+      inlineContainer(tplDiv);
+    }
+    // HTML 模版：什么都不做，保留原始 style
+    tplDiv.removeAttribute('data-tpl');
+  });
+
+  clone.removeAttribute('class');
+  clone.style.setProperty('width', '100%');
+  clone.style.setProperty('box-sizing', 'border-box');
+
+  const result = clone.outerHTML;
+  doc.body.removeChild(clone);
+  return result;
 }
 
 // ===== Render template list =====
@@ -297,104 +369,214 @@ function saveTpl(type) {
   if (!name) { showToast('请输入模版名称'); return; }
   if (!content.trim()) { showToast('内容不能为空'); return; }
 
+  let savedId = editingTplId;
+
   if (type === 'header') {
     const list = getHeaderTpls();
     if (editingTplId) {
       const idx = list.findIndex(t => t.id === editingTplId);
       if (idx >= 0) list[idx] = { ...list[idx], name, content };
     } else {
-      list.push({ id: genId(), name, content });
+      const newId = genId();
+      savedId = newId;
+      list.push({ id: newId, name, content });
     }
     saveHeaderTpls(list);
+    // 新建时自动激活；编辑时如果是当前激活的模版，内容已更新无需改 id
+    if (!editingTplId) {
+      activeHeaderId = savedId;
+      saveToStorage(STORAGE_KEY_ACTIVE_HEADER, savedId);
+    }
   } else {
     const list = getFooterTpls();
     if (editingTplId) {
       const idx = list.findIndex(t => t.id === editingTplId);
       if (idx >= 0) list[idx] = { ...list[idx], name, content };
     } else {
-      list.push({ id: genId(), name, content });
+      const newId = genId();
+      savedId = newId;
+      list.push({ id: newId, name, content });
     }
     saveFooterTpls(list);
+    // 新建时自动激活
+    if (!editingTplId) {
+      activeFooterId = savedId;
+      saveToStorage(STORAGE_KEY_ACTIVE_FOOTER, savedId);
+    }
   }
 
   closeTplEditor(type);
   renderTplList(type);
   updatePreview();
-  showToast('模版已保存');
+  showToast('模版已保存' + (savedId && (type === 'header' ? activeHeaderId : activeFooterId) === savedId ? '并已激活' : ''));
 }
 
-// ===== Copy with inline styles =====
-function extractInlinedHtml() {
-  const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
-  const section = doc.body.querySelector('section');
-  if (!section) return doc.body.innerHTML;
+// ===== CSS Rule Parser =====
+/**
+ * 解析主题 CSS 文本，返回规则映射：
+ * {
+ *   element: { prop: value, ... },           // .theme-xxx p
+ *   'element::before': { content, ... },     // .theme-xxx p::before
+ *   'element::after': { content, ... },
+ *   'element .child': { ... },               // .theme-xxx h2 .content
+ *   '__root__': { ... },                     // .theme-xxx 根容器
+ * }
+ */
+function parseThemeCssRules(cssText) {
+  const rules = {};
+  // 去掉注释
+  const cleaned = cssText.replace(/\/\*[\s\S]*?\*\//g, '');
+  // 匹配每条规则
+  const ruleRe = /([^{]+)\{([^}]*)\}/g;
+  let m;
+  while ((m = ruleRe.exec(cleaned)) !== null) {
+    const selector = m[1].trim();
+    const body = m[2].trim();
+    if (!body) continue;
 
-  const TAGS = ['p','h1','h2','h3','h4','h5','h6','blockquote','pre','code',
-                 'strong','em','a','ul','ol','li','table','thead','tbody','tr',
-                 'th','td','hr','img','del','section','div','span','figure',
-                 'figcaption','br'];
-  const PROPS = [
-    'font-family','font-size','font-weight','font-style',
-    'color','background-color','background-image','background-size',
-    'line-height','letter-spacing','text-align','text-decoration',
-    'margin','margin-top','margin-right','margin-bottom','margin-left',
-    'padding','padding-top','padding-right','padding-bottom','padding-left',
-    'border','border-top','border-right','border-bottom','border-left',
-    'border-radius','border-collapse',
-    'width','max-width','height',
-    'display','vertical-align','overflow-x',
-    'list-style-type','list-style',
-    'position','z-index',
-    'white-space','word-break','word-wrap',
-    'box-shadow','opacity',
-  ];
+    // 解析属性
+    const props = {};
+    body.split(';').forEach(decl => {
+      const idx = decl.indexOf(':');
+      if (idx < 0) return;
+      const prop = decl.slice(0, idx).trim();
+      const val  = decl.slice(idx + 1).trim();
+      if (prop && val) props[prop] = val;
+    });
+    if (Object.keys(props).length === 0) continue;
 
-  const clone = section.cloneNode(true);
-  doc.body.appendChild(clone);
+    // 提取选择器中 .theme-xxx 后面的部分
+    // 支持：.theme-xxx { }  .theme-xxx p { }  .theme-xxx h2::before { }  .theme-xxx h2 .content { }
+    const themeRe = /\.theme-[\w-]+\s*(.*)/;
+    const sm = selector.match(themeRe);
+    if (!sm) continue;
 
-  function inlineNode(original, cloned) {
-    if (original.nodeType !== 1) return;
-    const tag = original.tagName.toLowerCase();
-    if (TAGS.includes(tag)) {
-      const computed = doc.defaultView.getComputedStyle(original);
-      const styles = [];
-      for (const prop of PROPS) {
-        const val = computed.getPropertyValue(prop);
-        if (val && val !== 'initial' && val !== 'normal' && val !== 'none' && val !== '') {
-          if (prop === 'background-color' && val === 'rgba(0, 0, 0, 0)') continue;
-          if (prop === 'background-image' && val === 'none') continue;
-          styles.push(`${prop}:${val}`);
-        }
-      }
-      const existing = cloned.getAttribute('style') || '';
-      cloned.setAttribute('style', existing ? existing + ';' + styles.join(';') : styles.join(';'));
-    }
-    const origChildren = original.children;
-    const clonedChildren = cloned.children;
-    for (let i = 0; i < origChildren.length; i++) {
-      inlineNode(origChildren[i], clonedChildren[i]);
-    }
+    const rest = sm[1].trim(); // e.g. "p", "h2::before", "h2 .content", ""
+    const key = rest === '' ? '__root__' : rest;
+    rules[key] = Object.assign(rules[key] || {}, props);
+  }
+  return rules;
+}
+
+// ===== Inline Styles from Theme Rules =====
+/**
+ * 把解析好的主题规则直接内联到 DOM 节点上。
+ * 伪元素 ::before / ::after 转成真实 <span> 节点插入。
+ * 子选择器（如 h2 .content）保留为 class，由调用方处理。
+ */
+function applyThemeRulesToDom(container, rules, doc) {
+  // 标签名 → 规则 key 的映射（只处理普通元素规则）
+  const TAG_KEYS = ['p','h1','h2','h3','h4','h5','h6',
+    'blockquote','code','pre','strong','em','a',
+    'ul','ol','li','hr','table','th','td','img','del','section','div','span'];
+
+  // 应用根容器样式
+  if (rules['__root__']) {
+    applyProps(container, rules['__root__']);
   }
 
-  inlineNode(section, clone);
-  clone.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'));
-  const result = clone.outerHTML;
-  doc.body.removeChild(clone);
-  return result;
+  TAG_KEYS.forEach(tag => {
+    const elRules = rules[tag];
+    const beforeRules = rules[`${tag}::before`];
+    const afterRules  = rules[`${tag}::after`];
+
+    container.querySelectorAll(tag).forEach(el => {
+      // 跳过 pre 内部的 code（已有 pre code 规则处理）
+      if (tag === 'code' && el.closest('pre')) {
+        const preCodeRules = rules['pre code'];
+        if (preCodeRules) applyProps(el, preCodeRules);
+        return;
+      }
+
+      if (elRules) applyProps(el, elRules);
+
+      // 处理 ::before 伪元素 → 插入真实 <span>
+      if (beforeRules && beforeRules['content']) {
+        const span = makePseudoSpan(beforeRules, doc);
+        if (span) el.insertBefore(span, el.firstChild);
+      }
+
+      // 处理 ::after 伪元素 → 追加真实 <span>
+      if (afterRules && afterRules['content']) {
+        const span = makePseudoSpan(afterRules, doc);
+        if (span) el.appendChild(span);
+      }
+    });
+  });
+
+  // 处理子选择器规则，如 "h2 .content"、"h1::before" 已处理，
+  // 这里处理 "h2 .content" 这类 .content 子元素
+  Object.keys(rules).forEach(key => {
+    if (key === '__root__' || !key.includes(' ')) return;
+    if (key.includes('::')) return; // 伪元素已处理
+    // key 形如 "h2 .content"
+    try {
+      container.querySelectorAll(key).forEach(el => {
+        applyProps(el, rules[key]);
+      });
+    } catch(e) {}
+  });
+}
+
+function applyProps(el, props) {
+  Object.entries(props).forEach(([prop, val]) => {
+    // 跳过 position/content/z-index 等不适合直接内联的属性
+    if (['position', 'z-index', 'content', 'counter-reset', 'counter-increment',
+         'transition', 'animation', 'clip-path', 'transform'].includes(prop)) return;
+    try { el.style.setProperty(prop, val); } catch(e) {}
+  });
+}
+
+function makePseudoSpan(pseudoRules, doc) {
+  let text = pseudoRules['content'] || '';
+  // CSS content 值：去掉引号，处理转义
+  text = text.replace(/^['"]|['"]$/g, '');
+  // 空字符串伪元素（纯装饰用 background/border）→ 用空 span 承载样式
+  const span = doc.createElement('span');
+  span.setAttribute('aria-hidden', 'true');
+  if (text && text !== 'none' && text !== '') {
+    // 处理 Unicode 转义 \201C → "
+    text = text.replace(/\\([0-9a-fA-F]{4,6})/g, (_, hex) =>
+      String.fromCodePoint(parseInt(hex, 16))
+    );
+    span.textContent = text;
+  }
+  // 应用伪元素的样式（排除 content 本身）
+  const styleProps = Object.assign({}, pseudoRules);
+  delete styleProps['content'];
+  // 伪元素通常是 inline-block 或 block
+  if (!styleProps['display']) styleProps['display'] = 'inline-block';
+  applyProps(span, styleProps);
+  // 纯装饰性空伪元素（无文字、无背景）不插入
+  const hasVisual = text || styleProps['background'] || styleProps['background-color']
+    || styleProps['border'] || styleProps['width'];
+  return hasVisual ? span : null;
+}
+
+// ===== Build Inlined HTML for Copy =====
+/**
+ * 预览已经是内联样式了，直接从 iframe body 取出即可。
+ */
+async function buildInlinedHtml() {
+  const doc = previewIframe.contentDocument || previewIframe.contentWindow.document;
+  const section = doc.body.querySelector('section');
+  return section ? section.outerHTML : doc.body.innerHTML;
 }
 
 copyBtn.addEventListener('click', async () => {
   await updatePreview();
-  const inlinedHtml = extractInlinedHtml();
+  // 等 iframe 渲染稳定后再提取
+  await new Promise(r => setTimeout(r, 80));
+  const html = await buildInlinedHtml();
   try {
-    const blob = new Blob([inlinedHtml], { type: 'text/html' });
+    const blob = new Blob([html], { type: 'text/html' });
     await navigator.clipboard.write([new ClipboardItem({
       'text/html': blob,
-      'text/plain': new Blob([inlinedHtml], { type: 'text/plain' })
+      'text/plain': new Blob([html], { type: 'text/plain' })
     })]);
     showToast('复制成功！可直接粘贴到微信公众号编辑器');
   } catch(e) {
-    try { await navigator.clipboard.writeText(inlinedHtml); showToast('复制成功！(纯文本模式)'); }
+    try { await navigator.clipboard.writeText(html); showToast('复制成功！(纯文本模式)'); }
     catch(e2) { showToast('复制失败，请手动复制'); }
   }
 });
@@ -425,7 +607,10 @@ headerTplBtn.addEventListener('click', () => {
   closeTplEditor('header');
   headerTplModal.classList.add('show');
 });
-closeHeaderTplBtn.addEventListener('click', () => headerTplModal.classList.remove('show'));
+closeHeaderTplBtn.addEventListener('click', () => {
+  headerTplModal.classList.remove('show');
+  updatePreview();
+});
 addHeaderTplBtn.addEventListener('click', () => openTplEditor('header'));
 saveHeaderTplBtn.addEventListener('click', () => saveTpl('header'));
 cancelHeaderTplEditBtn.addEventListener('click', () => closeTplEditor('header'));
@@ -436,7 +621,10 @@ footerTplBtn.addEventListener('click', () => {
   closeTplEditor('footer');
   footerTplModal.classList.add('show');
 });
-closeFooterTplBtn.addEventListener('click', () => footerTplModal.classList.remove('show'));
+closeFooterTplBtn.addEventListener('click', () => {
+  footerTplModal.classList.remove('show');
+  updatePreview();
+});
 addFooterTplBtn.addEventListener('click', () => openTplEditor('footer'));
 saveFooterTplBtn.addEventListener('click', () => saveTpl('footer'));
 cancelFooterTplEditBtn.addEventListener('click', () => closeTplEditor('footer'));
