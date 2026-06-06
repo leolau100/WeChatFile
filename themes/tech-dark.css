@@ -1,0 +1,29 @@
+/* 主题：终端黑客 */
+.theme-tech-dark { font-family:'JetBrains Mono','Fira Code','Consolas',Monaco,monospace;background:#0a0f0a;color:#00ff41; }
+.theme-tech-dark p { margin:0.9em 0;line-height:1.85;color:#c0d8c0;font-size:14px;letter-spacing:0.02em; }
+.theme-tech-dark h1 { margin:1.8em 0 0.8em;font-weight:700;font-size:1.6em;color:#00ff41;text-transform:uppercase;letter-spacing:0.1em;position:relative; }
+.theme-tech-dark h1::before { content:'> ';color:#00cc33;opacity:0.6; }
+.theme-tech-dark h2 { margin:1.5em 0 0.7em;font-weight:700;font-size:1.3em;color:#00e636;padding:8px 14px;background:rgba(0,255,65,0.06);border-left:3px solid #00ff41;letter-spacing:0.05em; }
+.theme-tech-dark h2::before { content:'## ';color:#00cc33;opacity:0.5;font-weight:400; }
+.theme-tech-dark h3 { margin:1.3em 0 0.5em;font-weight:600;font-size:1.1em;color:#7fffb2;letter-spacing:0.04em; }
+.theme-tech-dark h3::before { content:'### ';color:#00cc33;opacity:0.5;font-weight:400; }
+.theme-tech-dark h4 { margin:1.1em 0 0.4em;font-weight:600;font-size:1em;color:#7fffb2; }
+.theme-tech-dark h5 { margin:0.9em 0 0.3em;font-weight:600;font-size:0.95em;color:#7fffb2; }
+.theme-tech-dark h6 { margin:0.8em 0 0.3em;font-weight:600;font-size:0.9em;color:#7fffb2; }
+.theme-tech-dark blockquote { margin:1.4em 0;padding:12px 16px;background:rgba(0,255,65,0.04);border-left:3px solid #00cc33;color:#a0c8a0;font-style:normal; }
+.theme-tech-dark code { background:rgba(0,255,65,0.08);padding:2px 6px;border-radius:2px;font-family:inherit;font-size:0.9em;color:#00ff41;border:1px solid rgba(0,255,65,0.2); }
+.theme-tech-dark pre { background:#030803;padding:16px;border-radius:4px;overflow-x:auto;margin:1.5em 0;font-family:inherit;font-size:13px;color:#00ff41;border:1px solid rgba(0,255,65,0.2);box-shadow:0 0 15px rgba(0,255,65,0.05); }
+.theme-tech-dark pre code { background:none;padding:0;border:none;color:inherit;font-size:inherit; }
+.theme-tech-dark strong { font-weight:700;color:#00ff41;text-shadow:0 0 6px rgba(0,255,65,0.4); }
+.theme-tech-dark em { color:#7fffb2;font-style:italic; }
+.theme-tech-dark a { color:#00ccff;text-decoration:none;border-bottom:1px solid rgba(0,204,255,0.3); }
+.theme-tech-dark ul { margin:0.8em 0;padding-left:1.6em;list-style:none; }
+.theme-tech-dark ul > li { position:relative;margin:0.4em 0;padding-left:0.4em;line-height:1.8;color:#c0d8c0; }
+.theme-tech-dark ul > li::before { content:'$';position:absolute;left:-1.2em;color:#00ff41;font-size:0.9em;line-height:1.9; }
+.theme-tech-dark ol { margin:0.8em 0;padding-left:1.8em; }
+.theme-tech-dark li { margin:0.4em 0;line-height:1.8;color:#c0d8c0; }
+.theme-tech-dark hr { border:none;border-top:1px solid rgba(0,255,65,0.2);margin:2em 0; }
+.theme-tech-dark table { border-collapse:collapse;width:100%;margin:1.5em 0; }
+.theme-tech-dark th { border:1px solid rgba(0,255,65,0.25);padding:8px 12px;text-align:left;background:rgba(0,255,65,0.07);color:#00ff41;font-weight:600; }
+.theme-tech-dark td { border:1px solid rgba(0,255,65,0.12);padding:8px 12px;color:#c0d8c0; }
+.theme-tech-dark img { max-width:100%;height:auto;border-radius:4px;margin:1em 0;border:1px solid rgba(0,255,65,0.2);filter:saturate(0.8) brightness(0.9); }
