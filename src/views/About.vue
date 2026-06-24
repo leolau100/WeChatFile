@@ -23,8 +23,9 @@
           GitHub
         </a>
         <a
-          href="#"
-          @click.prevent="showDonate = true"
+          href="https://github.com/sponsors/leolau100"
+          target="_blank"
+          rel="noopener noreferrer"
           class="badge badge-donate"
         >☕ 请我喝咖啡</a>
         <span class="badge badge-version">v2.0.0</span>
@@ -80,7 +81,7 @@
             </span>
             <span class="link-arrow">→</span>
           </a>
-          <a href="#" @click.prevent="showDonate = true" class="link-item">
+          <a href="https://github.com/sponsors/leolau100" target="_blank" rel="noopener noreferrer" class="link-item">
             <span class="link-icon">☕</span>
             <span class="link-text">
               <span class="link-title">请我喝咖啡</span>
@@ -97,8 +98,8 @@
         <div class="author-card">
           <div class="author-avatar">👤</div>
           <div class="author-info">
-            <span class="author-name">YOUR_NAME</span>
-            <span class="author-bio">替换为你的个人简介</span>
+            <span class="author-name">DoublePoint</span>
+            <span class="author-bio">Build something we like and want.</span>
             <div class="author-links">
               <a :href="GITHUB_URL" target="_blank" rel="noopener noreferrer">GitHub</a>
               <!-- 可以添加更多社交链接 -->
@@ -112,25 +113,19 @@
       <!-- License -->
       <div class="about-footer">
         <p>基于 <a :href="`${GITHUB_URL}/blob/main/LICENSE`" target="_blank" rel="noopener noreferrer">MIT License</a> 开源</p>
-        <p>© 2024 YOUR_NAME · Made with ❤️</p>
+        <p>© 2024 DoublePoint · Made with ❤️</p>
       </div>
     </div>
-
-    <!-- Donate Modal -->
-    <DonateModal :visible="showDonate" @close="showDonate = false" />
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import DonateModal from '../components/DonateModal.vue'
 
 const router = useRouter()
-const showDonate = ref(false)
 
-// 替换为你的 GitHub 仓库地址
-const GITHUB_URL = 'https://github.com/YOUR_USERNAME/NiceWeChatFile'
+// GitHub 仓库地址
+const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'
 </script>
 
 <style scoped>

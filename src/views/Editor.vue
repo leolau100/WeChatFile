@@ -9,6 +9,15 @@
         <span class="header-subtitle">Markdown → 微信公众号</span>
       </div>
       <div class="header-actions">
+        <a
+          href="https://github.com/sponsors/leolau100"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-donate"
+          title="请我喝杯咖啡"
+        >
+          <span class="donate-icon">☕</span>
+        </a>
         <button class="btn btn-ghost" @click="showThemeModal = true">🎨 主题</button>
         <button class="btn btn-ghost" @click="handleReset" title="重置所有缓存">↺</button>
         <button class="btn btn-primary" @click="handleCopy">📋 一键复制</button>
@@ -105,14 +114,11 @@
           GitHub
         </a>
         <span class="statusbar-sep">·</span>
-        <a href="#" @click.prevent="showDonateModal = true" class="statusbar-link statusbar-link-donate" title="请我喝咖啡">☕ 赞赏</a>
+        <a href="https://github.com/sponsors/leolau100" target="_blank" rel="noopener noreferrer" class="statusbar-link statusbar-link-donate" title="请我喝咖啡">☕ 赞赏</a>
         <span class="statusbar-sep">·</span>
         <span>v2.0</span>
       </div>
     </footer>
-
-    <!-- Donate Modal -->
-    <DonateModal :visible="showDonateModal" @close="showDonateModal = false" />
 
     <!-- Toast -->
     <div class="toast" :class="{ show: toast.show }">{{ toast.message }}</div>
@@ -164,7 +170,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
-import DonateModal from '../components/DonateModal.vue'
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -176,9 +181,8 @@ const STORAGE_KEYS = {
   ACTIVE_FOOTER: 'wechat_md_active_footer'
 }
 
-// GitHub & Donate
-const GITHUB_URL = 'https://github.com/YOUR_USERNAME/NiceWeChatFile'
-const showDonateModal = ref(false)
+// GitHub
+const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'
 
 // Environment Detection
 const IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL
@@ -1323,6 +1327,37 @@ onMounted(() => {
   border: 1px solid #e0e0e0;
 }
 .btn-ghost:hover { background: #f5f5f5; border-color: #ccc; color: #222; }
+.btn-donate {
+  background: transparent;
+  border: 1px solid #fed7aa;
+  color: #c2410c;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 10px;
+  border-radius: 8px;
+  height: 32px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-donate:hover {
+  background: #fff7ed;
+  border-color: #fb923c;
+}
+.donate-icon {
+  display: inline-block;
+  animation: coffee-bounce 1.8s ease-in-out infinite;
+  font-size: 15px;
+}
+@keyframes coffee-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  20%       { transform: translateY(-4px) rotate(-8deg); }
+  40%       { transform: translateY(0) rotate(0deg); }
+  60%       { transform: translateY(-2px) rotate(5deg); }
+  80%       { transform: translateY(0) rotate(0deg); }
+}
 .btn-danger { background: #ff4d4f; color: #fff; }
 .btn-danger:hover { background: #e03e40; }
 .btn-secondary { background: #f0f0f0; color: #444; border: 1px solid #e0e0e0; }
