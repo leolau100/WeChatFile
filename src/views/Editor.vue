@@ -97,8 +97,22 @@
     <!-- Status Bar -->
     <footer class="statusbar">
       <span>实时预览 · 点击「一键复制」后直接粘贴到微信公众号编辑器</span>
-      <span>v2.0</span>
+      <div class="statusbar-right">
+        <a :href="GITHUB_URL" target="_blank" rel="noopener noreferrer" class="statusbar-link" title="GitHub">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+          GitHub
+        </a>
+        <span class="statusbar-sep">·</span>
+        <a href="#" @click.prevent="showDonateModal = true" class="statusbar-link statusbar-link-donate" title="请我喝咖啡">☕ 赞赏</a>
+        <span class="statusbar-sep">·</span>
+        <span>v2.0</span>
+      </div>
     </footer>
+
+    <!-- Donate Modal -->
+    <DonateModal :visible="showDonateModal" @close="showDonateModal = false" />
 
     <!-- Toast -->
     <div class="toast" :class="{ show: toast.show }">{{ toast.message }}</div>
@@ -118,6 +132,10 @@
       type="header"
       :templates="headerTemplates"
       :active-id="activeHeaderId"
+      :current-theme="currentTheme"
+      :get-theme-css="getThemeCss"
+      :render-template="renderTemplate"
+      :inline-theme="inlineThemeToSection"
       @close="showHeaderTplModal = false"
       @update="updateHeaderTemplates"
       @active-change="handleActiveHeaderChange"
@@ -130,6 +148,10 @@
       type="footer"
       :templates="footerTemplates"
       :active-id="activeFooterId"
+      :current-theme="currentTheme"
+      :get-theme-css="getThemeCss"
+      :render-template="renderTemplate"
+      :inline-theme="inlineThemeToSection"
       @close="showFooterTplModal = false"
       @update="updateFooterTemplates"
       @active-change="handleActiveFooterChange"
@@ -142,6 +164,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
+import DonateModal from '../components/DonateModal.vue'
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -152,6 +175,10 @@ const STORAGE_KEYS = {
   ACTIVE_HEADER: 'wechat_md_active_header',
   ACTIVE_FOOTER: 'wechat_md_active_footer'
 }
+
+// GitHub & Donate
+const GITHUB_URL = 'https://github.com/YOUR_USERNAME/NiceWeChatFile'
+const showDonateModal = ref(false)
 
 // Environment Detection
 const IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL
@@ -453,7 +480,7 @@ function inlineThemeToSection(doc, themeCssText) {
   const bodyDiv = clone.querySelector('[data-tpl="body"]')
   if (bodyDiv) {
     inlineContainer(bodyDiv)
-    bodyDiv.removeAttribute('data-tpl')
+    // 保留 data-tpl，由 buildInlinedHtml 统一清理
   }
 
   ['header', 'footer'].forEach(tplType => {
@@ -463,7 +490,7 @@ function inlineThemeToSection(doc, themeCssText) {
     if (themeChild) {
       inlineContainer(tplDiv)
     }
-    tplDiv.removeAttribute('data-tpl')
+    // 保留 data-tpl，由 buildInlinedHtml 统一清理
   })
 
   clone.removeAttribute('class')
@@ -500,8 +527,8 @@ async function updatePreview() {
 
   const headerWrapStyle = `position:relative;outline:1px dashed ${hColor};outline-offset:2px;background:${hBg};padding-top:12px;`
   const footerWrapStyle = `position:relative;outline:1px dashed ${fColor};outline-offset:2px;background:${fBg};padding-top:12px;`
-  const headerLabel = `<div style="position:absolute;top:0;left:15px;transform:translateY(-50%);background:${hColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;font-family:sans-serif;pointer-events:none;white-space:nowrap;">${hText}</div>`
-  const footerLabel = `<div style="position:absolute;top:0;left:15px;transform:translateY(-50%);background:${fColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;font-family:sans-serif;pointer-events:none;white-space:nowrap;">${activeFooterId.value ? '▼ 底部模版' : '▼ 底部模版（未启用）'}</div>`
+  const headerLabel = `<div data-preview-only="1" style="position:absolute;top:0;left:15px;transform:translateY(-50%);background:${hColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;font-family:sans-serif;pointer-events:none;white-space:nowrap;">${hText}</div>`
+  const footerLabel = `<div data-preview-only="1" style="position:absolute;top:0;left:15px;transform:translateY(-50%);background:${fColor};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:3px;letter-spacing:1px;font-family:sans-serif;pointer-events:none;white-space:nowrap;">${activeFooterId.value ? '▼ 底部模版' : '▼ 底部模版（未启用）'}</div>`
 
   // 虚线框标注（仅预览用）
   const zoneAnimCss = ``
@@ -553,6 +580,32 @@ async function updatePreview() {
   let roTimer = null
   let ro = null
 
+  // 清理预览 DOM：去掉 data-tpl / class / 预览专用样式，让预览和微信实际效果一致
+  // 必须在高度测量完成后才能清理（applyHeight 依赖 data-tpl 选择器）
+  function cleanPreviewDom(iframeDoc) {
+    try {
+      iframeDoc.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
+      iframeDoc.querySelectorAll('[data-tpl]').forEach(el => {
+        const tplType = el.getAttribute('data-tpl')
+        if (tplType === 'header' || tplType === 'footer') {
+          const hasContent = el.children.length > 0 || el.textContent.trim() !== ''
+          if (!hasContent) { el.remove(); return }
+          el.style.removeProperty('outline')
+          el.style.removeProperty('outline-offset')
+          el.style.removeProperty('position')
+          el.style.removeProperty('padding-top')
+          if (!el.getAttribute('style') || el.getAttribute('style').trim() === '') {
+            el.removeAttribute('style')
+          }
+        }
+        el.removeAttribute('class')
+        el.removeAttribute('data-tpl')
+      })
+    } catch (e) {}
+  }
+
+  let previewCleaned = false
+
   const applyHeight = () => {
     try {
       const iframeDoc = iframe.contentDocument
@@ -568,16 +621,14 @@ async function updatePreview() {
       const h = maxBottom + 15
       iframe.style.height = h + 'px'
 
-      // 更新顶部/底部竖线高度（对应 iframe 内 data-tpl 节点高度）
+      // 更新顶部/底部竖线高度（对应 iframe 内 data-tpl 节点高度，需在清理前测量）
       const section = body.querySelector('section')
       if (section) {
         const headerDiv = section.querySelector('[data-tpl="header"]')
         const footerDiv = section.querySelector('[data-tpl="footer"]')
-        const sectionRect = section.getBoundingClientRect()
 
         if (headerDiv) {
           const r = headerDiv.getBoundingClientRect()
-          // 换算为 iframe 坐标：顶部 zone 区域高度 + zone label 高度
           const zoneEl = previewFrameWrapRef.value?.querySelector('.preview-zone-header')
           const zoneH = zoneEl ? zoneEl.offsetHeight : 0
           headerZoneHeight.value = Math.round(r.height * (iframe.offsetWidth / (r.width || iframe.offsetWidth))) + zoneH
@@ -588,6 +639,12 @@ async function updatePreview() {
           const zoneH = zoneEl ? zoneEl.offsetHeight : 0
           footerZoneHeight.value = Math.round(r.height * (iframe.offsetWidth / (r.width || iframe.offsetWidth))) + zoneH
         }
+      }
+
+      // 高度测量完毕后，做一次 DOM 清理（只做一次，避免重复）
+      if (!previewCleaned) {
+        previewCleaned = true
+        cleanPreviewDom(iframeDoc)
       }
     } catch (e) {}
   }
@@ -617,7 +674,115 @@ async function updatePreview() {
 async function buildInlinedHtml() {
   const doc = previewIframeRef.value.contentDocument || previewIframeRef.value.contentWindow.document
   const section = doc.body.querySelector('section')
-  return section ? section.outerHTML : doc.body.innerHTML
+  if (!section) return doc.body.innerHTML
+
+  // ── 1. 克隆，删除预览专用元素 ──────────────────────────────────────────────
+  const clone = section.cloneNode(true)
+  clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
+
+  // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
+  clone.querySelectorAll('[data-tpl]').forEach(el => {
+    const tplType = el.getAttribute('data-tpl')
+    if (tplType === 'header' || tplType === 'footer') {
+      const hasContent = el.children.length > 0 || el.textContent.trim() !== ''
+      if (!hasContent) { el.remove(); return }
+      el.style.removeProperty('outline')
+      el.style.removeProperty('outline-offset')
+      el.style.removeProperty('position')
+      el.style.removeProperty('padding-top')
+      if (!el.getAttribute('style')?.trim()) el.removeAttribute('style')
+    }
+    el.removeAttribute('class')
+    el.removeAttribute('data-tpl')
+  })
+
+  // ── 3. 继承属性下沉 ────────────────────────────────────────────────────────
+  // 微信会过滤 style 里含有 font-family 的 <div>（识别为继承容器）
+  // 把继承属性下沉到实际内容元素，容器只保留 padding / background-color
+  const INHERIT_PROPS = ['font-family', 'color', 'font-size', 'line-height', 'letter-spacing', 'text-align']
+  const CONTENT_TAGS = ['p', 'li', 'td', 'th', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span']
+  clone.querySelectorAll('div, section').forEach(container => {
+    const styleStr = container.getAttribute('style') || ''
+    if (!styleStr.includes('padding') && !styleStr.includes('font-family')) return
+    const inherited = {}
+    INHERIT_PROPS.forEach(prop => {
+      const val = container.style.getPropertyValue(prop)
+      if (val) inherited[prop] = val
+    })
+    if (!Object.keys(inherited).length) return
+    CONTENT_TAGS.forEach(tag => {
+      container.querySelectorAll(tag).forEach(el => {
+        Object.entries(inherited).forEach(([prop, val]) => {
+          if (!el.style.getPropertyValue(prop)) el.style.setProperty(prop, val)
+        })
+      })
+    })
+    INHERIT_PROPS.forEach(prop => container.style.removeProperty(prop))
+  })
+
+  // ── 4. 把所有 <div> 替换成 <section>（微信支持 section，不支持 div）────────
+  // 保留所有属性（style 等），只换标签名
+  clone.querySelectorAll('div').forEach(div => {
+    const sec = doc.createElement('section')
+    // 复制所有属性
+    Array.from(div.attributes).forEach(attr => sec.setAttribute(attr.name, attr.value))
+    // 移入子节点
+    while (div.firstChild) sec.appendChild(div.firstChild)
+    div.parentNode.replaceChild(sec, div)
+  })
+
+  // ── 5. 解包微信不支持的其他块级标签（保留子内容）────────────────────────
+  // header/footer/nav/article/aside/figure/figcaption/main → 解包
+  const UNWRAP_TAGS = ['header', 'footer', 'nav', 'article', 'aside', 'figure', 'figcaption', 'main', 'details', 'summary']
+  UNWRAP_TAGS.forEach(tag => {
+    clone.querySelectorAll(tag).forEach(el => {
+      const parent = el.parentNode
+      while (el.firstChild) parent.insertBefore(el.firstChild, el)
+      parent.removeChild(el)
+    })
+  })
+
+  // ── 6. style 属性规范化（微信兼容性修复）──────────────────────────────────
+  clone.querySelectorAll('[style]').forEach(el => {
+    let s = el.getAttribute('style')
+    if (!s) return
+
+    // font-family 里的双引号 → 单引号（防止序列化成 &quot; 导致 style 解析失败）
+    s = s.replace(/font-family\s*:[^;]*/gi, m => m.replace(/"/g, "'"))
+
+    // background: <纯色> → background-color（微信不支持 background 简写作背景色）
+    s = s.replace(/(?<![a-z-])background\s*:\s*([^;]+)/gi, (match, val) => {
+      const v = val.trim()
+      if (/^(linear-gradient|radial-gradient|conic-gradient|url)/i.test(v)) return match
+      return `background-color: ${v}`
+    })
+
+    // 去掉微信完全不认的属性
+    const UNSUPPORTED = ['outline', 'outline-offset', 'box-shadow', 'transition', 'animation',
+      'transform', 'clip-path', 'filter', 'z-index', 'position', 'overflow',
+      'cursor', 'pointer-events', 'user-select', '-webkit-user-select']
+    UNSUPPORTED.forEach(prop => {
+      s = s.replace(new RegExp(`(?<![a-z-])${prop}\\s*:[^;]*(;|$)`, 'gi'), '')
+    })
+
+    // 清理多余空白和孤立分号
+    s = s.replace(/;+/g, ';').replace(/^\s*;|;\s*$/g, '').trim()
+
+    if (s) el.setAttribute('style', s)
+    else el.removeAttribute('style')
+  })
+
+  // ── 7. 去掉所有残留 class 属性 ────────────────────────────────────────────
+  clone.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'))
+
+  // ── 8. 去掉所有 data-* 属性 ───────────────────────────────────────────────
+  clone.querySelectorAll('*').forEach(el => {
+    Array.from(el.attributes)
+      .filter(a => a.name.startsWith('data-'))
+      .forEach(a => el.removeAttribute(a.name))
+  })
+
+  return clone.outerHTML
 }
 
 // Event Handlers
@@ -738,6 +903,14 @@ const DEFAULT_HEADER_TEMPLATES = [
   <p style="margin:0;font-size:11px;color:#999;">BY 作者名字 &nbsp;·&nbsp; 预计阅读 8 分钟</p>
 </div>
 </section>`
+  },
+  {
+    name: 'Markdown 简洁标题',
+    content: `# 📌 本期主题
+
+> 一句话概括本文核心观点，让读者一眼知道值不值得读。
+
+**作者**：你的名字 | **发布**：2024.12`
   },
 ]
 
@@ -874,6 +1047,14 @@ const DEFAULT_FOOTER_TEMPLATES = [
   </div>
 </div>
 </section>`
+  },
+  {
+    name: 'Markdown 简洁结尾',
+    content: `---
+
+🙏 **感谢阅读**，如果对你有启发，欢迎转发给朋友。
+
+**关注「公众号名称」**，每周更新职场认知与 AI 工具实践。`
   },
 ]
 
@@ -1515,6 +1696,30 @@ onMounted(() => {
 .statusbar span {
   font-size: 11px;
   color: #bbb;
+}
+.statusbar-right {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.statusbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #bbb;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.statusbar-link:hover {
+  color: #555;
+}
+.statusbar-link-donate:hover {
+  color: #c2410c;
+}
+.statusbar-sep {
+  font-size: 11px;
+  color: #ddd;
 }
 
 /* ===== Toast ===== */

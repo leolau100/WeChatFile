@@ -31,15 +31,36 @@
       
       <div class="footer">
         <p>也可以安装为 <a href="#" @click.prevent="showExtInfo">Chrome 浏览器插件</a></p>
+        <div class="footer-links">
+          <a :href="GITHUB_URL" target="_blank" rel="noopener noreferrer" class="footer-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:-1px">
+              <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            GitHub
+          </a>
+          <span class="footer-dot">·</span>
+          <a href="#" @click.prevent="showDonate = true" class="footer-link footer-link-donate">☕ 请我喝咖啡</a>
+          <span class="footer-dot">·</span>
+          <a href="#" @click.prevent="router.push('/about')" class="footer-link">关于</a>
+        </div>
       </div>
     </div>
+
+    <!-- Donate Modal -->
+    <DonateModal :visible="showDonate" @close="showDonate = false" />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import DonateModal from '../components/DonateModal.vue'
 
 const router = useRouter()
+const showDonate = ref(false)
+
+// 替换为你的 GitHub 仓库地址
+const GITHUB_URL = 'https://github.com/YOUR_USERNAME/NiceWeChatFile'
 
 function goToEditor() {
   router.push('/editor')
@@ -154,5 +175,33 @@ h1 {
 }
 .footer a:hover {
   text-decoration: underline;
+}
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #aaa;
+  text-decoration: none;
+  font-size: 12px;
+  transition: color 0.15s;
+}
+.footer-link:hover {
+  color: #555;
+  text-decoration: none;
+}
+.footer-link-donate:hover {
+  color: #c2410c;
+}
+.footer-dot {
+  color: #ddd;
+  font-size: 12px;
 }
 </style>
