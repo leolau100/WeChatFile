@@ -18,6 +18,7 @@
         >
           <span class="donate-icon">☕</span>
         </a>
+        <button class="btn btn-ghost" @click="showSvgEffectsModal = true">✦ SVG动效</button>
         <button class="btn btn-ghost" @click="showThemeModal = true">🎨 主题</button>
         <button class="btn btn-ghost" @click="handleReset" title="重置所有缓存">↺</button>
         <button class="btn btn-primary" @click="handleCopy">📋 一键复制</button>
@@ -162,6 +163,13 @@
       @update="updateFooterTemplates"
       @active-change="handleActiveFooterChange"
     />
+
+    <!-- SVG Effects Modal -->
+    <SvgEffectsModal
+      v-if="showSvgEffectsModal"
+      @close="showSvgEffectsModal = false"
+      @insert="handleSvgInsert"
+    />
   </div>
 </template>
 
@@ -170,6 +178,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { marked } from 'marked'
 import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
+import SvgEffectsModal from '../components/SvgEffectsModal.vue'
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -207,6 +216,7 @@ const activeFooterId = ref(null)
 const showThemeModal = ref(false)
 const showHeaderTplModal = ref(false)
 const showFooterTplModal = ref(false)
+const showSvgEffectsModal = ref(false)
 
 // 区域标注样式：1=虚线框(Figma), 2=左边框(Notion), 3=横带(VSCode)
 const zoneStyle = ref(1)
@@ -819,6 +829,23 @@ function handleThemeChange(theme) {
   currentTheme.value = theme
   saveToStorage(STORAGE_KEYS.THEME, theme)
   updatePreview()
+}
+
+// Insert SVG effect HTML into markdown editor
+function handleSvgInsert(htmlCode) {
+  const editor = mdEditorRef.value
+  if (!editor) return
+  const start = editor.selectionStart
+  const end = editor.selectionEnd
+  const before = mdContent.value.substring(0, start)
+  const after = mdContent.value.substring(end)
+  mdContent.value = before + '\n' + htmlCode + '\n' + after
+  // Restore cursor position after the inserted code
+  setTimeout(() => {
+    editor.focus()
+    const newPos = start + htmlCode.length + 2
+    editor.setSelectionRange(newPos, newPos)
+  }, 50)
 }
 
 function updateHeaderTemplates(tpls) {
