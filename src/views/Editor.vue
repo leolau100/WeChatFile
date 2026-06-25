@@ -10,9 +10,8 @@
       </div>
       <div class="header-actions">
         <a
-          href="https://github.com/sponsors/leolau100"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#"
+          @click.prevent="showDonateModal = true"
           class="btn btn-donate"
           title="请我喝杯咖啡"
         >
@@ -115,7 +114,7 @@
           GitHub
         </a>
         <span class="statusbar-sep">·</span>
-        <a href="https://github.com/sponsors/leolau100" target="_blank" rel="noopener noreferrer" class="statusbar-link statusbar-link-donate" title="请我喝咖啡">☕ 赞赏</a>
+        <a href="#" @click.prevent="showDonateModal = true" class="statusbar-link statusbar-link-donate" title="请我喝咖啡">☕ 赞赏</a>
         <span class="statusbar-sep">·</span>
         <span>v2.0</span>
       </div>
@@ -170,6 +169,9 @@
       @close="showSvgEffectsModal = false"
       @insert="handleSvgInsert"
     />
+
+    <!-- Donate Modal -->
+    <DonateModal :visible="showDonateModal" @close="showDonateModal = false" />
   </div>
 </template>
 
@@ -179,6 +181,7 @@ import { marked } from 'marked'
 import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
 import SvgEffectsModal from '../components/SvgEffectsModal.vue'
+import DonateModal from '../components/DonateModal.vue'
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -192,6 +195,7 @@ const STORAGE_KEYS = {
 
 // GitHub
 const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'
+const showDonateModal = ref(false)
 
 // Environment Detection
 const IS_EXTENSION = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL

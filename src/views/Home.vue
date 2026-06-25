@@ -39,19 +39,24 @@
             GitHub
           </a>
           <span class="footer-dot">·</span>
-          <a href="https://github.com/sponsors/leolau100" target="_blank" rel="noopener noreferrer" class="footer-link footer-link-donate">☕ 请我喝咖啡</a>
+          <a href="#" @click.prevent="showDonate = true" class="footer-link footer-link-donate">☕ 请我喝咖啡</a>
           <span class="footer-dot">·</span>
           <a href="#" @click.prevent="router.push('/about')" class="footer-link">关于</a>
         </div>
       </div>
     </div>
+
+    <DonateModal :visible="showDonate" @close="showDonate = false" />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import DonateModal from '../components/DonateModal.vue'
 
 const router = useRouter()
+const showDonate = ref(false)
 
 // GitHub 仓库地址
 const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'

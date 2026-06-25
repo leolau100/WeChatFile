@@ -23,9 +23,8 @@
           GitHub
         </a>
         <a
-          href="https://github.com/sponsors/leolau100"
-          target="_blank"
-          rel="noopener noreferrer"
+          href="#"
+          @click.prevent="showDonate = true"
           class="badge badge-donate"
         >☕ 请我喝咖啡</a>
         <span class="badge badge-version">v2.0.0</span>
@@ -81,7 +80,7 @@
             </span>
             <span class="link-arrow">→</span>
           </a>
-          <a href="https://github.com/sponsors/leolau100" target="_blank" rel="noopener noreferrer" class="link-item">
+          <a href="#" @click.prevent="showDonate = true" class="link-item">
             <span class="link-icon">☕</span>
             <span class="link-text">
               <span class="link-title">请我喝咖啡</span>
@@ -116,13 +115,18 @@
         <p>© 2024 DoublePoint · Made with ❤️</p>
       </div>
     </div>
+
+    <DonateModal :visible="showDonate" @close="showDonate = false" />
   </div>
 </template>
 
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import DonateModal from '../components/DonateModal.vue'
 
 const router = useRouter()
+const showDonate = ref(false)
 
 // GitHub 仓库地址
 const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'
