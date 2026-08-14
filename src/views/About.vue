@@ -134,13 +134,14 @@ const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'
 
 <style scoped>
 .about-container {
-  min-height: 100vh;
+  height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: flex-start;
   justify-content: center;
   padding: 40px 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', sans-serif;
+  overflow-y: auto;
 }
 
 .about-card {
