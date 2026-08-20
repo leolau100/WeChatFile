@@ -48,19 +48,19 @@
                 <div :key="activeTab" class="qr-img-box">
                   <img
                     v-if="activeTab === 'wechat'"
-                    src="/donate/wechat-pay.jpg"
+                    :src="`${baseUrl}donate/wechat-pay.jpg`"
                     alt="微信收款码"
                     class="qr-img"
                   />
                   <img
                     v-else-if="activeTab === 'alipay'"
-                    src="/donate/alipay-pay.jpg"
+                    :src="`${baseUrl}donate/alipay-pay.jpg`"
                     alt="支付宝收款码"
                     class="qr-img"
                   />
                   <img
                     v-else
-                    src="/donate/wechat-add.jpg"
+                    :src="`${baseUrl}donate/wechat-add.jpg`"
                     alt="微信号二维码"
                     class="qr-img"
                   />
@@ -95,6 +95,7 @@ defineProps({
 defineEmits(['close'])
 
 const activeTab = ref('wechat')
+const baseUrl = import.meta.env.BASE_URL
 </script>
 
 <style scoped>
