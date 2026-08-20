@@ -439,6 +439,24 @@ function applyThemeRulesToDom(container, rules, doc) {
     'blockquote', 'code', 'pre', 'strong', 'em', 'a',
     'ul', 'ol', 'li', 'hr', 'table', 'th', 'td', 'img', 'del', 'section', 'div', 'span']
 
+  // 列表（* / - 等）在主题里大多只设了 color/line-height，缺少 font-size/font-family，
+  // 内联到微信后会回退到默认 17px。这里从根容器 / 正文 p 继承字体属性做兜底补全。
+  const _root = rules['__root__'] || {}
+  const _p = rules['p'] || {}
+  const _inheritFont = {
+    'font-family': _root['font-family'] || _p['font-family'] || '',
+    'font-size': _root['font-size'] || _p['font-size'] || '',
+    'color': _root['color'] || _p['color'] || '',
+    'line-height': _root['line-height'] || _p['line-height'] || '',
+  }
+  const LIST_TAGS = ['ul', 'ol', 'li']
+  function ensureFontProps(el) {
+    for (const [prop, val] of Object.entries(_inheritFont)) {
+      if (!val) continue
+      if (!el.style.getPropertyValue(prop)) el.style.setProperty(prop, val)
+    }
+  }
+
   if (rules['__root__']) {
     applyProps(container, rules['__root__'])
   }
@@ -456,6 +474,7 @@ function applyThemeRulesToDom(container, rules, doc) {
       }
 
       if (elRules) applyProps(el, elRules)
+      if (LIST_TAGS.includes(tag)) ensureFontProps(el)
 
       if (beforeRules && beforeRules['content']) {
         const span = makePseudoSpan(beforeRules, doc)
