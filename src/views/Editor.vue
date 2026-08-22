@@ -516,7 +516,7 @@ function applyThemeRulesToDom(container, rules, doc) {
         dot.textContent = '•'
         dot.style.display = 'inline-block'
         dot.style.position = 'absolute'
-        dot.style.left = '-0.9em'
+        dot.style.left = '-0.5em'
         dot.style.top = '0'
         dot.style.color = _accent
         dot.style.fontSize = '1em'
@@ -543,9 +543,9 @@ function applyThemeRulesToDom(container, rules, doc) {
             num.textContent = `${idx + 1}.`
             num.style.display = 'inline-block'
             num.style.position = 'absolute'
-            num.style.left = '-1.4em'
+            num.style.left = '-1em'
             num.style.top = '0'
-            num.style.minWidth = '1.2em'
+            num.style.minWidth = '1em'
             num.style.textAlign = 'right'
             num.style.color = _accent || _root['color'] || _p['color'] || '#333'
             num.style.fontSize = '1em'
@@ -587,12 +587,16 @@ function applyThemeRulesToDom(container, rules, doc) {
 function normalizeLists(root, doc) {
   root.querySelectorAll('ul, ol').forEach(listEl => {
     const wrapper = doc.createElement('div')
-    // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style
+    // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style 与 padding-left
+    // padding-left 改由列表项自己控制，避免主题默认大缩进 + 项缩进叠加
     Array.from(listEl.attributes).forEach(a => {
       if (a.name === 'style') return
       wrapper.setAttribute(a.name, a.value)
     })
-    const listStyle = (listEl.getAttribute('style') || '').replace(/list-style[^;]*;?/gi, '').trim()
+    const listStyle = (listEl.getAttribute('style') || '')
+      .replace(/list-style[^;]*;?/gi, '')
+      .replace(/padding-left[^;]*;?/gi, '')
+      .trim()
     if (listStyle) wrapper.setAttribute('style', listStyle)
     else wrapper.removeAttribute('style')
 
@@ -606,10 +610,12 @@ function normalizeLists(root, doc) {
         if (a.name === 'class') return
         item.setAttribute(a.name, a.value)
       })
-      // 确保相对定位 + 左缩进，让绝对定位的图标/编号可见
+      // 确保相对定位 + 较小的左缩进，让绝对定位的图标/编号与文字紧凑排列
       item.style.position = 'relative'
+      const isOrdered = listEl.tagName === 'OL'
+      const desiredPl = isOrdered ? '1em' : '0.8em'
       const pl = item.style.paddingLeft
-      if (!pl || parseFloat(pl) < 1) item.style.paddingLeft = '1.5em'
+      if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = desiredPl
       while (li.firstChild) item.appendChild(li.firstChild)
       wrapper.appendChild(item)
     })
