@@ -477,6 +477,31 @@ function applyThemeRulesToDom(container, rules, doc) {
       if (elRules) applyProps(el, elRules)
       if (LIST_TAGS.includes(tag)) ensureFontProps(el)
 
+      // 无序列表兜底：主题既没有自定义 ul::before 图标，也没声明 list-style 时，
+      // 自动注入一个圆点图标，避免内联到微信后只剩 padding-left 造成的「空格」效果。
+      const hasListStyle = elRules && (elRules['list-style'] || elRules['list-style-type'])
+      if (tag === 'ul' && !beforeRules && !hasListStyle) {
+        const dot = doc.createElement('span')
+        dot.setAttribute('aria-hidden', 'true')
+        dot.textContent = '•'
+        dot.style.display = 'inline-block'
+        dot.style.position = 'absolute'
+        dot.style.left = '-0.9em'
+        dot.style.top = '0'
+        dot.style.color = _root['color'] || _p['color'] || '#333'
+        dot.style.fontSize = '1em'
+        dot.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
+        el.style.position = 'relative'
+        el.style.listStyle = 'none'
+        el.querySelectorAll(':scope > li').forEach(li => {
+          if (!li.querySelector(':scope > span[data-bullet]')) {
+            const d = dot.cloneNode(true)
+            d.setAttribute('data-bullet', 'true')
+            li.insertBefore(d, li.firstChild)
+          }
+        })
+      }
+
       if (beforeRules && beforeRules['content']) {
         const span = makePseudoSpan(beforeRules, doc)
         if (span) el.insertBefore(span, el.firstChild)
