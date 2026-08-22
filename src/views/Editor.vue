@@ -462,10 +462,27 @@ function applyThemeRulesToDom(container, rules, doc) {
     applyProps(container, rules['__root__'])
   }
 
+  // 根据标签匹配「可能的」伪元素规则键名（主题写法多样：ul::before / ul>li::before / li::before）
+  function findPseudoRules(tag, pseudo) {
+    const candidates = [
+      `${tag} > li${pseudo}`,
+      `${tag} li${pseudo}`,
+      `${tag}${pseudo}`,
+      `li${pseudo}`,
+    ]
+    for (const c of candidates) {
+      if (rules[c]) return rules[c]
+    }
+    // 兜底：扫描所有包含该标签与伪元素的键
+    const fallbackKey = Object.keys(rules).find(k =>
+      k.includes(tag) && k.includes(pseudo.replace('::', '::')))
+    return fallbackKey ? rules[fallbackKey] : undefined
+  }
+
   TAG_KEYS.forEach(tag => {
     const elRules = rules[tag]
-    const beforeRules = rules[`${tag}::before`]
-    const afterRules = rules[`${tag}::after`]
+    const beforeRules = findPseudoRules(tag, '::before')
+    const afterRules = findPseudoRules(tag, '::after')
 
     container.querySelectorAll(tag).forEach(el => {
       if (tag === 'code' && el.closest('pre')) {
@@ -483,6 +500,15 @@ function applyThemeRulesToDom(container, rules, doc) {
       const hasListStyle = elRules && (elRules['list-style'] || elRules['list-style-type'])
       const listStyleIsNone = el.style.listStyle === 'none'
 
+      // 取主题强调色（用于列表标记着色）：优先 before 图标的颜色/背景，
+      // 其次 h2/strong/a 的强调色，再次正文/根色，最后兜底灰。
+      const _accent =
+        (beforeRules && (beforeRules['color'] || beforeRules['background'] || beforeRules['background-color'])) ||
+        rules['h2'] && (rules['h2']['color']) ||
+        rules['strong'] && (rules['strong']['color']) ||
+        rules['a'] && (rules['a']['color']) ||
+        _root['color'] || _p['color'] || '#333'
+
       if (tag === 'ul' && (listStyleIsNone || (!beforeRules && !hasListStyle))) {
         const dot = doc.createElement('span')
         dot.setAttribute('aria-hidden', 'true')
@@ -492,9 +518,7 @@ function applyThemeRulesToDom(container, rules, doc) {
         dot.style.position = 'absolute'
         dot.style.left = '-0.9em'
         dot.style.top = '0'
-        // 优先使用主题自定义 before 图标的颜色/背景色
-        dot.style.color = (beforeRules && (beforeRules['color'] || beforeRules['background'] || beforeRules['background-color']))
-          || _root['color'] || _p['color'] || '#333'
+        dot.style.color = _accent
         dot.style.fontSize = '1em'
         dot.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
         el.style.position = 'relative'
@@ -523,7 +547,7 @@ function applyThemeRulesToDom(container, rules, doc) {
             num.style.top = '0'
             num.style.minWidth = '1.2em'
             num.style.textAlign = 'right'
-            num.style.color = _root['color'] || _p['color'] || '#333'
+            num.style.color = _accent || _root['color'] || _p['color'] || '#333'
             num.style.fontSize = '1em'
             num.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
             li.style.position = 'relative'
