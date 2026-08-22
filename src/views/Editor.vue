@@ -477,27 +477,57 @@ function applyThemeRulesToDom(container, rules, doc) {
       if (elRules) applyProps(el, elRules)
       if (LIST_TAGS.includes(tag)) ensureFontProps(el)
 
-      // 无序列表兜底：主题既没有自定义 ul::before 图标，也没声明 list-style 时，
-      // 自动注入一个圆点图标，避免内联到微信后只剩 padding-left 造成的「空格」效果。
+      // 列表兜底：很多主题用 `list-style:none + ul>li::before` 来自定义图标，
+      // 但 class 最终会被剥离，伪元素图标随之丢失，只剩缩进看起来像空格。
+      // 因此无论主题是否写了 ::before，只要最终 list-style 为 none，就注入真实 span 兜底。
       const hasListStyle = elRules && (elRules['list-style'] || elRules['list-style-type'])
-      if (tag === 'ul' && !beforeRules && !hasListStyle) {
+      const listStyleIsNone = el.style.listStyle === 'none'
+
+      if (tag === 'ul' && (listStyleIsNone || (!beforeRules && !hasListStyle))) {
         const dot = doc.createElement('span')
         dot.setAttribute('aria-hidden', 'true')
+        dot.setAttribute('data-bullet', 'true')
         dot.textContent = '•'
         dot.style.display = 'inline-block'
         dot.style.position = 'absolute'
         dot.style.left = '-0.9em'
         dot.style.top = '0'
-        dot.style.color = _root['color'] || _p['color'] || '#333'
+        // 优先使用主题自定义 before 图标的颜色/背景色
+        dot.style.color = (beforeRules && (beforeRules['color'] || beforeRules['background'] || beforeRules['background-color']))
+          || _root['color'] || _p['color'] || '#333'
         dot.style.fontSize = '1em'
         dot.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
         el.style.position = 'relative'
         el.style.listStyle = 'none'
         el.querySelectorAll(':scope > li').forEach(li => {
           if (!li.querySelector(':scope > span[data-bullet]')) {
-            const d = dot.cloneNode(true)
-            d.setAttribute('data-bullet', 'true')
-            li.insertBefore(d, li.firstChild)
+            li.style.position = 'relative'
+            li.insertBefore(dot.cloneNode(true), li.firstChild)
+          }
+        })
+      }
+
+      // 有序列表兜底：主题把 ol list-style 设成 none 时，注入 1. 2. 3. 编号
+      if (tag === 'ol' && listStyleIsNone) {
+        el.style.position = 'relative'
+        el.style.listStyle = 'none'
+        el.querySelectorAll(':scope > li').forEach((li, idx) => {
+          if (!li.querySelector(':scope > span[data-bullet]')) {
+            const num = doc.createElement('span')
+            num.setAttribute('aria-hidden', 'true')
+            num.setAttribute('data-bullet', 'true')
+            num.textContent = `${idx + 1}.`
+            num.style.display = 'inline-block'
+            num.style.position = 'absolute'
+            num.style.left = '-1.4em'
+            num.style.top = '0'
+            num.style.minWidth = '1.2em'
+            num.style.textAlign = 'right'
+            num.style.color = _root['color'] || _p['color'] || '#333'
+            num.style.fontSize = '1em'
+            num.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
+            li.style.position = 'relative'
+            li.insertBefore(num, li.firstChild)
           }
         })
       }
