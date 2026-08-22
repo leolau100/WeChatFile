@@ -579,6 +579,42 @@ function applyThemeRulesToDom(container, rules, doc) {
   })
 }
 
+// 列表归一化：把 ul/ol/li 转成纯 div + 图标 span（不依赖 li 标签与 list-style）
+// 使导出 HTML 不含 ul/ol/li，符合微信对标签的限制，同时保留自定义字体图标/编号。
+function normalizeLists(root) {
+  root.querySelectorAll('ul, ol').forEach(listEl => {
+    const wrapper = doc.createElement('div')
+    // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style
+    Array.from(listEl.attributes).forEach(a => {
+      if (a.name === 'style') return
+      wrapper.setAttribute(a.name, a.value)
+    })
+    const listStyle = (listEl.getAttribute('style') || '').replace(/list-style[^;]*;?/gi, '').trim()
+    if (listStyle) wrapper.setAttribute('style', listStyle)
+    else wrapper.removeAttribute('style')
+
+    Array.from(listEl.children).forEach(li => {
+      if (li.tagName !== 'LI') {
+        wrapper.appendChild(li)
+        return
+      }
+      const item = doc.createElement('div')
+      Array.from(li.attributes).forEach(a => {
+        if (a.name === 'class') return
+        item.setAttribute(a.name, a.value)
+      })
+      // 确保相对定位 + 左缩进，让绝对定位的图标/编号可见
+      item.style.position = 'relative'
+      const pl = item.style.paddingLeft
+      if (!pl || parseFloat(pl) < 1) item.style.paddingLeft = '1.5em'
+      while (li.firstChild) item.appendChild(li.firstChild)
+      wrapper.appendChild(item)
+    })
+
+    if (listEl.parentNode) listEl.parentNode.replaceChild(wrapper, listEl)
+  })
+}
+
 // Inline Theme to Section
 function inlineThemeToSection(doc, themeCssText) {
   const section = doc.body.querySelector('section')
@@ -613,6 +649,9 @@ function inlineThemeToSection(doc, themeCssText) {
   clone.removeAttribute('class')
   clone.style.setProperty('width', '100%')
   clone.style.setProperty('box-sizing', 'border-box')
+
+  // 列表转 div（预览与复制一致）
+  normalizeLists(clone)
 
   const result = clone.outerHTML
   doc.body.removeChild(clone)
@@ -800,6 +839,9 @@ async function buildInlinedHtml() {
   const clone = section.cloneNode(true)
   clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
 
+  // 列表转 div（与预览一致，确保复制结果不含 ul/ol/li）
+  normalizeLists(clone)
+
   // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
   clone.querySelectorAll('[data-tpl]').forEach(el => {
     const tplType = el.getAttribute('data-tpl')
@@ -820,7 +862,7 @@ async function buildInlinedHtml() {
   // 微信会过滤 style 里含有 font-family 的 <div>（识别为继承容器）
   // 把继承属性下沉到实际内容元素，容器只保留 padding / background-color
   const INHERIT_PROPS = ['font-family', 'color', 'font-size', 'line-height', 'letter-spacing', 'text-align']
-  const CONTENT_TAGS = ['p', 'li', 'td', 'th', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span']
+  const CONTENT_TAGS = ['p', 'li', 'div', 'td', 'th', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span']
   clone.querySelectorAll('div, section').forEach(container => {
     const styleStr = container.getAttribute('style') || ''
     if (!styleStr.includes('padding') && !styleStr.includes('font-family')) return
