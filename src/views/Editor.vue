@@ -611,9 +611,10 @@ function normalizeLists(root, doc) {
         item.setAttribute(a.name, a.value)
       })
       // 确保相对定位 + 较小的左缩进，让绝对定位的图标/编号与文字紧凑排列
+      // 在缩进基础上再留 4px 间距，使圆点/编号与文字不贴在一起
       item.style.position = 'relative'
       const isOrdered = listEl.tagName === 'OL'
-      const desiredPl = isOrdered ? '1em' : '0.8em'
+      const desiredPl = isOrdered ? 'calc(1em + 4px)' : 'calc(0.8em + 4px)'
       const pl = item.style.paddingLeft
       if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = desiredPl
       while (li.firstChild) item.appendChild(li.firstChild)
