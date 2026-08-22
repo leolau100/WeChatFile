@@ -581,7 +581,7 @@ function applyThemeRulesToDom(container, rules, doc) {
 
 // 列表归一化：把 ul/ol/li 转成纯 div + 图标 span（不依赖 li 标签与 list-style）
 // 使导出 HTML 不含 ul/ol/li，符合微信对标签的限制，同时保留自定义字体图标/编号。
-function normalizeLists(root) {
+function normalizeLists(root, doc) {
   root.querySelectorAll('ul, ol').forEach(listEl => {
     const wrapper = doc.createElement('div')
     // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style
@@ -651,7 +651,7 @@ function inlineThemeToSection(doc, themeCssText) {
   clone.style.setProperty('box-sizing', 'border-box')
 
   // 列表转 div（预览与复制一致）
-  normalizeLists(clone)
+  normalizeLists(clone, doc)
 
   const result = clone.outerHTML
   doc.body.removeChild(clone)
@@ -840,7 +840,7 @@ async function buildInlinedHtml() {
   clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
 
   // 列表转 div（与预览一致，确保复制结果不含 ul/ol/li）
-  normalizeLists(clone)
+  normalizeLists(clone, doc)
 
   // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
   clone.querySelectorAll('[data-tpl]').forEach(el => {
