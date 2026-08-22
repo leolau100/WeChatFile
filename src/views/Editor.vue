@@ -556,14 +556,17 @@ function applyThemeRulesToDom(container, rules, doc) {
         })
       }
 
-      if (beforeRules && beforeRules['content']) {
-        const span = makePseudoSpan(beforeRules, doc)
-        if (span) el.insertBefore(span, el.firstChild)
-      }
+      // 列表标签的伪元素图标统一由上方列表兜底处理，避免这里再插一个 span 导致重复标记
+      if (!LIST_TAGS.includes(tag)) {
+        if (beforeRules && beforeRules['content']) {
+          const span = makePseudoSpan(beforeRules, doc)
+          if (span) el.insertBefore(span, el.firstChild)
+        }
 
-      if (afterRules && afterRules['content']) {
-        const span = makePseudoSpan(afterRules, doc)
-        if (span) el.appendChild(span)
+        if (afterRules && afterRules['content']) {
+          const span = makePseudoSpan(afterRules, doc)
+          if (span) el.appendChild(span)
+        }
       }
     })
   })
