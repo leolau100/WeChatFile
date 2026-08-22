@@ -38,6 +38,7 @@
           class="editor-textarea"
           placeholder="在这里输入 Markdown 内容..."
           @input="handleInput"
+          @scroll="handleEditorScroll"
         ></textarea>
       </div>
 
@@ -56,7 +57,7 @@
           </div>
         </Transition>
 
-        <div class="preview-wrapper" ref="previewWrapperRef">
+        <div class="preview-wrapper" ref="previewWrapperRef" @scroll="handlePreviewScroll">
           <!-- 顶部模版选择条 -->
           <div class="tpl-bar tpl-bar-top" :class="{ 'tpl-bar-active': activeHeaderId }" ref="headerBarRef">
             <div class="tpl-bar-inner">
@@ -176,7 +177,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { marked } from 'marked'
 import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
@@ -658,6 +659,9 @@ async function updatePreview() {
       const h = maxBottom + 15
       iframe.style.height = h + 'px'
 
+      // 高度变化后，保证预览跟随左侧编辑滚动位置
+      nextTick(syncPreviewScroll)
+
       // 更新顶部/底部竖线高度（对应 iframe 内 data-tpl 节点高度，需在清理前测量）
       const section = body.querySelector('section')
       if (section) {
@@ -825,6 +829,52 @@ async function buildInlinedHtml() {
 // Event Handlers
 function handleInput() {
   updatePreview()
+}
+
+// 左侧编辑区 / 右侧预览 双向滚动联动
+let isSyncing = false
+
+function setScrollRatio(srcEl, dstEl, ratio) {
+  const srcMax = srcEl.scrollHeight - srcEl.clientHeight
+  const dstMax = dstEl.scrollHeight - dstEl.clientHeight
+  if (srcMax <= 0 || dstMax <= 0) return
+  dstEl.scrollTop = ratio * dstMax
+}
+
+function syncPreviewScroll() {
+  const editor = mdEditorRef.value
+  const wrapper = previewWrapperRef.value
+  if (!editor || !wrapper || isSyncing) return
+  const edMax = editor.scrollHeight - editor.clientHeight
+  if (edMax <= 0) return
+  const ratio = editor.scrollTop / edMax
+  const wrapMax = wrapper.scrollHeight - wrapper.clientHeight
+  if (wrapMax <= 0) return
+  isSyncing = true
+  wrapper.scrollTop = ratio * wrapMax
+  requestAnimationFrame(() => { isSyncing = false })
+}
+
+function syncEditorScroll() {
+  const editor = mdEditorRef.value
+  const wrapper = previewWrapperRef.value
+  if (!editor || !wrapper || isSyncing) return
+  const wrapMax = wrapper.scrollHeight - wrapper.clientHeight
+  if (wrapMax <= 0) return
+  const ratio = wrapper.scrollTop / wrapMax
+  const edMax = editor.scrollHeight - editor.clientHeight
+  if (edMax <= 0) return
+  isSyncing = true
+  editor.scrollTop = ratio * edMax
+  requestAnimationFrame(() => { isSyncing = false })
+}
+
+function handleEditorScroll() {
+  syncPreviewScroll()
+}
+
+function handlePreviewScroll() {
+  syncEditorScroll()
 }
 
 async function handleCopy() {
