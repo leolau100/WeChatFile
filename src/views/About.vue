@@ -113,6 +113,7 @@
       <div class="about-footer">
         <p>基于 <a :href="`${GITHUB_URL}/blob/main/LICENSE`" target="_blank" rel="noopener noreferrer">MIT License</a> 开源</p>
         <p>© 2024 DoublePoint · Made with ❤️</p>
+        <p class="deploy-time">部署时间：{{ deployTime }}</p>
       </div>
     </div>
 
@@ -127,6 +128,10 @@ import DonateModal from '../components/DonateModal.vue'
 
 const router = useRouter()
 const showDonate = ref(false)
+
+// 构建时注入的部署时间（北京时间），由 vite.config.js 的 define 注入
+/* global __DEPLOY_TIME__ */
+const deployTime = __DEPLOY_TIME__
 
 // GitHub 仓库地址
 const GITHUB_URL = 'https://github.com/leolau100/WeChatFile'
@@ -395,5 +400,10 @@ h1 {
 }
 .about-footer a:hover {
   text-decoration: underline;
+}
+.deploy-time {
+  font-size: 12px !important;
+  color: #07c160 !important;
+  margin-top: 8px !important;
 }
 </style>
