@@ -593,13 +593,10 @@ function normalizeLists(root, doc) {
         if (a.name === 'class') return
         item.setAttribute(a.name, a.value)
       })
-      // 确保相对定位 + 较小的左缩进，让绝对定位的图标/编号与文字紧凑排列
-      // 在缩进基础上再留 4px 间距，使圆点/编号与文字不贴在一起
+      // 确保相对定位 + 固定左缩进，让绝对定位的图标/编号与文字紧凑排列
       item.style.position = 'relative'
-      const isOrdered = listEl.tagName === 'OL'
-      const desiredPl = isOrdered ? 'calc(1em + 4px)' : 'calc(0.8em + 4px)'
       const pl = item.style.paddingLeft
-      if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = desiredPl
+      if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = '10px'
       while (li.firstChild) item.appendChild(li.firstChild)
       wrapper.appendChild(item)
     })
@@ -992,8 +989,6 @@ function handlePreviewScroll() {
 }
 
 async function handleCopy() {
-  await updatePreview()
-  await new Promise(r => setTimeout(r, 80))
   const html = await buildInlinedHtml()
   try {
     const blob = new Blob([html], { type: 'text/html' })
