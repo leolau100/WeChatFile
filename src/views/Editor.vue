@@ -522,15 +522,11 @@ function applyThemeRulesToDom(container, rules, doc) {
               marker.setAttribute('aria-hidden', 'true')
               marker.setAttribute('data-bullet', 'true')
               marker.textContent = isOrdered ? `${idx + 1}.` : '•'
-              // 圆点与编号共用同一套定位/配色/间距逻辑
-              marker.style.display = 'inline-block'
-              marker.style.position = 'absolute'
-              marker.style.left = isOrdered ? '-1em' : '-0.5em'
-              marker.style.top = '0'
-              marker.style.minWidth = isOrdered ? '1em' : 'auto'
-              marker.style.textAlign = isOrdered ? 'right' : 'left'
+              // 圆点与编号共用同一套配色/间距逻辑，采用 inline（与复制到微信的结构一致）
+              marker.style.display = 'inline'
               marker.style.color = _accent || _root['color'] || _p['color'] || '#333'
               marker.style.fontSize = '1em'
+              marker.style.marginRight = isOrdered ? '6px' : '4px'
               marker.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
               li.style.position = 'relative'
               li.insertBefore(marker, li.firstChild)
@@ -565,10 +561,9 @@ function applyThemeRulesToDom(container, rules, doc) {
   })
 }
 
-// 列表复制优化：把 ul/ol/li 转成 <section> 段落序列（微信对 section 兼容性好）。
-// forCopy=true 时把兜底 marker span 改成 inline，让编号/图标与内容在同一行，不被微信拆段；
-// forCopy=false 时保留预览样式（absolute marker），保证编辑器预览效果。
-function normalizeLists(root, doc, forCopy = false) {
+// 列表归一化：把 ul/ol/li 转成 <section> 段落序列（微信对 section 兼容性好），
+// 并把每个列表项收敛为单一 <p> 段落（编号 + 内容同处一段），预览与复制共用同一结构。
+function normalizeLists(root, doc) {
   root.querySelectorAll('ul, ol').forEach(listEl => {
     const wrapper = doc.createElement('div')
     // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style 与 padding-left
@@ -600,34 +595,27 @@ function normalizeLists(root, doc, forCopy = false) {
 
       wrapper.appendChild(item)
 
-      // 复制时把列表项整体收敛为一个 <p> 段落（编号 + 内容同处一段），
-      // 避免微信编辑器把 marker 与内容拆成两行。
-      if (forCopy) {
-        const marker = item.querySelector(':scope > span[data-bullet]')
-        if (marker) {
-          marker.style.removeProperty('position')
-          marker.style.removeProperty('left')
-          marker.style.removeProperty('top')
-          marker.style.removeProperty('min-width')
-          marker.style.removeProperty('text-align')
-          marker.style.display = 'inline'
-          marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
-          marker.style.lineHeight = 'inherit'
-        }
+      // 把列表项整体收敛为一个 <p> 段落（编号 + 内容同处一段），
+      // 避免微信编辑器把 marker 与内容拆成两行，同时保证预览与复制一致。
+      const marker = item.querySelector(':scope > span[data-bullet]')
+      if (marker) {
+        marker.style.display = 'inline'
+        marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
+        marker.style.lineHeight = 'inherit'
+      }
 
-        // 找第一个块级子元素；没有则新建 <p> 把全部子内容包进去
-        let block = item.querySelector(':scope > p, :scope > section, :scope > div')
-        if (!block) {
-          block = doc.createElement('p')
-          while (item.firstChild) block.appendChild(item.firstChild)
-          item.appendChild(block)
-        } else if (block !== marker) {
-          // 把 marker 插入该块级元素最前面，其余子节点依次并入，成为同段内容
-          block.insertBefore(marker, block.firstChild)
-          const rest = []
-          Array.from(item.childNodes).forEach(n => { if (n !== block && n !== marker) rest.push(n) })
-          rest.forEach(n => block.appendChild(n))
-        }
+      // 找第一个块级子元素；没有则新建 <p> 把全部子内容包进去
+      let block = item.querySelector(':scope > p, :scope > section, :scope > div')
+      if (!block) {
+        block = doc.createElement('p')
+        while (item.firstChild) block.appendChild(item.firstChild)
+        item.appendChild(block)
+      } else if (block !== marker) {
+        // 把 marker 插入该块级元素最前面，其余子节点依次并入，成为同段内容
+        block.insertBefore(marker, block.firstChild)
+        const rest = []
+        Array.from(item.childNodes).forEach(n => { if (n !== block && n !== marker) rest.push(n) })
+        rest.forEach(n => block.appendChild(n))
       }
     })
 
@@ -670,8 +658,8 @@ function inlineThemeToSection(doc, themeCssText) {
   clone.style.setProperty('width', '100%')
   clone.style.setProperty('box-sizing', 'border-box')
 
-  // 列表转 div（预览，保留 absolute marker 样式）
-  normalizeLists(clone, doc, false)
+  // 列表转 div（预览，与复制共用同一结构）
+  normalizeLists(clone, doc)
 
   const result = clone.outerHTML
   doc.body.removeChild(clone)
@@ -859,8 +847,8 @@ async function buildInlinedHtml() {
   const clone = section.cloneNode(true)
   clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
 
-  // 列表复制优化：转成 section 段落序列，marker 改为 inline 避免微信拆行
-  normalizeLists(clone, doc, true)
+  // 列表复制优化：转成 section 段落序列，与预览共用同一结构
+  normalizeLists(clone, doc)
 
   // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
   clone.querySelectorAll('[data-tpl]').forEach(el => {
