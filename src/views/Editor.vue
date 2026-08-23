@@ -565,43 +565,39 @@ function applyThemeRulesToDom(container, rules, doc) {
   })
 }
 
-// 列表归一化：把 ul/ol/li 转成纯 div + 图标 span（不依赖 li 标签与 list-style）
-// 使导出 HTML 不含 ul/ol/li，符合微信对标签的限制，同时保留自定义字体图标/编号。
-function normalizeLists(root, doc) {
+// 列表复制优化：保留 ul/ol/li 标签（微信编辑器原生支持列表），
+// 仅清理 list-style 并把兜底 marker span 改成 inline 显示，
+// 避免 absolute 定位的 marker 在微信编辑器里与内容被拆成两段。
+function normalizeLists(root) {
   root.querySelectorAll('ul, ol').forEach(listEl => {
-    const wrapper = doc.createElement('div')
-    // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style 与 padding-left
-    // padding-left 改由列表项自己控制，避免主题默认大缩进 + 项缩进叠加
-    Array.from(listEl.attributes).forEach(a => {
-      if (a.name === 'style') return
-      wrapper.setAttribute(a.name, a.value)
-    })
+    // 去掉 list-style / padding-left 等可能冲突的声明，交给 li 自己控制
     const listStyle = (listEl.getAttribute('style') || '')
       .replace(/list-style[^;]*;?/gi, '')
       .replace(/padding-left[^;]*;?/gi, '')
       .trim()
-    if (listStyle) wrapper.setAttribute('style', listStyle)
-    else wrapper.removeAttribute('style')
+    if (listStyle) listEl.setAttribute('style', listStyle)
+    else listEl.removeAttribute('style')
 
     Array.from(listEl.children).forEach(li => {
-      if (li.tagName !== 'LI') {
-        wrapper.appendChild(li)
-        return
-      }
-      const item = doc.createElement('div')
-      Array.from(li.attributes).forEach(a => {
-        if (a.name === 'class') return
-        item.setAttribute(a.name, a.value)
-      })
-      // 确保相对定位 + 固定左缩进，让绝对定位的图标/编号与文字紧凑排列
-      item.style.position = 'relative'
-      const pl = item.style.paddingLeft
-      if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = '10px'
-      while (li.firstChild) item.appendChild(li.firstChild)
-      wrapper.appendChild(item)
-    })
+      if (li.tagName !== 'LI') return
+      li.style.position = 'relative'
+      const pl = li.style.paddingLeft
+      if (!pl || parseFloat(pl) < 0.5) li.style.paddingLeft = '10px'
 
-    if (listEl.parentNode) listEl.parentNode.replaceChild(wrapper, listEl)
+      // 兜底 marker 在预览区是 absolute，便于对齐；复制时改成 inline，
+      // 让它和后面的文本同处一个段落，微信不会拆行。
+      const marker = li.querySelector(':scope > span[data-bullet]')
+      if (marker) {
+        marker.style.removeProperty('position')
+        marker.style.removeProperty('left')
+        marker.style.removeProperty('top')
+        marker.style.removeProperty('min-width')
+        marker.style.removeProperty('text-align')
+        marker.style.display = 'inline'
+        marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
+        marker.style.lineHeight = 'inherit'
+      }
+    })
   })
 }
 
@@ -829,8 +825,8 @@ async function buildInlinedHtml() {
   const clone = section.cloneNode(true)
   clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
 
-  // 列表转 div（与预览一致，确保复制结果不含 ul/ol/li）
-  normalizeLists(clone, doc)
+  // 列表复制优化：保留 ul/ol/li，仅调整 marker 为 inline 避免微信拆行
+  normalizeLists(clone)
 
   // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
   clone.querySelectorAll('[data-tpl]').forEach(el => {
