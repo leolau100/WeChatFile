@@ -416,18 +416,26 @@ function applyProps(el, props) {
 }
 
 // Make Pseudo Element Span
-function makePseudoSpan(pseudoRules, doc) {
+function makePseudoSpan(pseudoRules, doc, isBefore = true) {
   let text = pseudoRules['content'] || ''
   text = text.replace(/^['"]|['"]$/g, '')
   const span = doc.createElement('span')
   span.setAttribute('aria-hidden', 'true')
+  span.setAttribute('data-pseudo-icon', isBefore ? 'before' : 'after')
   if (text && text !== 'none' && text !== '') {
     text = text.replace(/\\([0-9a-fA-F]{4,6})/g, (_, hex) => String.fromCodePoint(parseInt(hex, 16)))
     span.textContent = text
   }
   const styleProps = Object.assign({}, pseudoRules)
   delete styleProps['content']
-  if (!styleProps['display']) styleProps['display'] = 'inline-block'
+  // 默认 inline 显示，避免绝对定位导致微信编辑器把图标和文字拆成两行
+  if (!styleProps['display']) styleProps['display'] = 'inline'
+  // 去掉会造成换行的绝对定位属性（icon 只做行内前缀）
+  delete styleProps['position']
+  delete styleProps['left']
+  delete styleProps['top']
+  delete styleProps['right']
+  delete styleProps['bottom']
   applyProps(span, styleProps)
   const hasVisual = text || styleProps['background'] || styleProps['background-color']
     || styleProps['border'] || styleProps['width']
@@ -538,12 +546,17 @@ function applyThemeRulesToDom(container, rules, doc) {
       // 列表标签的伪元素图标统一由上方列表兜底处理，避免这里再插一个 span 导致重复标记
       if (!LIST_TAGS.includes(tag)) {
         if (beforeRules && beforeRules['content']) {
-          const span = makePseudoSpan(beforeRules, doc)
-          if (span) el.insertBefore(span, el.firstChild)
+          const span = makePseudoSpan(beforeRules, doc, true)
+          if (span) {
+            // 把 before 图标放到第一个块级子元素开头，和文字同处一行
+            const firstBlock = el.querySelector(':scope > p, :scope > section, :scope > div')
+            if (firstBlock) firstBlock.insertBefore(span, firstBlock.firstChild)
+            else el.insertBefore(span, el.firstChild)
+          }
         }
 
         if (afterRules && afterRules['content']) {
-          const span = makePseudoSpan(afterRules, doc)
+          const span = makePseudoSpan(afterRules, doc, false)
           if (span) el.appendChild(span)
         }
       }
