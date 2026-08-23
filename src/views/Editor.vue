@@ -509,51 +509,34 @@ function applyThemeRulesToDom(container, rules, doc) {
         rules['a'] && (rules['a']['color']) ||
         _root['color'] || _p['color'] || '#333'
 
-      if (tag === 'ul' && (listStyleIsNone || (!beforeRules && !hasListStyle))) {
-        const dot = doc.createElement('span')
-        dot.setAttribute('aria-hidden', 'true')
-        dot.setAttribute('data-bullet', 'true')
-        dot.textContent = '•'
-        dot.style.display = 'inline-block'
-        dot.style.position = 'absolute'
-        dot.style.left = '-0.5em'
-        dot.style.top = '0'
-        dot.style.color = _accent
-        dot.style.fontSize = '1em'
-        dot.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
-        el.style.position = 'relative'
-        el.style.listStyle = 'none'
-        el.querySelectorAll(':scope > li').forEach(li => {
-          if (!li.querySelector(':scope > span[data-bullet]')) {
-            li.style.position = 'relative'
-            li.insertBefore(dot.cloneNode(true), li.firstChild)
-          }
-        })
-      }
-
-      // 有序列表兜底：主题把 ol list-style 设成 none 时，注入 1. 2. 3. 编号
-      if (tag === 'ol' && listStyleIsNone) {
-        el.style.position = 'relative'
-        el.style.listStyle = 'none'
-        el.querySelectorAll(':scope > li').forEach((li, idx) => {
-          if (!li.querySelector(':scope > span[data-bullet]')) {
-            const num = doc.createElement('span')
-            num.setAttribute('aria-hidden', 'true')
-            num.setAttribute('data-bullet', 'true')
-            num.textContent = `${idx + 1}.`
-            num.style.display = 'inline-block'
-            num.style.position = 'absolute'
-            num.style.left = '-1em'
-            num.style.top = '0'
-            num.style.minWidth = '1em'
-            num.style.textAlign = 'right'
-            num.style.color = _accent || _root['color'] || _p['color'] || '#333'
-            num.style.fontSize = '1em'
-            num.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
-            li.style.position = 'relative'
-            li.insertBefore(num, li.firstChild)
-          }
-        })
+      // 列表兜底：ul / ol 走同一套处理逻辑，仅标记内容不同（圆点 vs 编号）
+      if (LIST_TAGS.includes(tag)) {
+        const isOrdered = tag === 'ol'
+        // 主题未提供可见列表标记（list-style:none 或无 list-style 且无 ::before 图标）时注入兜底
+        if (listStyleIsNone || (!beforeRules && !hasListStyle)) {
+          el.style.position = 'relative'
+          el.style.listStyle = 'none'
+          el.querySelectorAll(':scope > li').forEach((li, idx) => {
+            if (!li.querySelector(':scope > span[data-bullet]')) {
+              const marker = doc.createElement('span')
+              marker.setAttribute('aria-hidden', 'true')
+              marker.setAttribute('data-bullet', 'true')
+              marker.textContent = isOrdered ? `${idx + 1}.` : '•'
+              // 圆点与编号共用同一套定位/配色/间距逻辑
+              marker.style.display = 'inline-block'
+              marker.style.position = 'absolute'
+              marker.style.left = isOrdered ? '-1em' : '-0.5em'
+              marker.style.top = '0'
+              marker.style.minWidth = isOrdered ? '1em' : 'auto'
+              marker.style.textAlign = isOrdered ? 'right' : 'left'
+              marker.style.color = _accent || _root['color'] || _p['color'] || '#333'
+              marker.style.fontSize = '1em'
+              marker.style.lineHeight = (elRules && elRules['line-height']) || '1.7'
+              li.style.position = 'relative'
+              li.insertBefore(marker, li.firstChild)
+            }
+          })
+        }
       }
 
       // 列表标签的伪元素图标统一由上方列表兜底处理，避免这里再插一个 span 导致重复标记
