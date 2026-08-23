@@ -600,8 +600,8 @@ function normalizeLists(root, doc, forCopy = false) {
 
       wrapper.appendChild(item)
 
-      // 复制时把兜底 marker 改成 inline，让它和文本同处一个段落，
-      // 避免微信编辑器把 absolute marker 和内容拆成两行。
+      // 复制时把兜底 marker 插入到第一个块级子元素（通常是 <p>）的最前面，
+      // 让编号和内容同属一个段落，避免微信编辑器把 marker 和内容拆成两行。
       if (forCopy) {
         const marker = item.querySelector(':scope > span[data-bullet]')
         if (marker) {
@@ -613,6 +613,12 @@ function normalizeLists(root, doc, forCopy = false) {
           marker.style.display = 'inline'
           marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
           marker.style.lineHeight = 'inherit'
+
+          // 把 marker 挪到第一个块级子元素开头；没有块级子元素则保留在原地
+          const firstBlock = item.querySelector(':scope > p, :scope > section, :scope > div')
+          if (firstBlock && firstBlock !== marker) {
+            firstBlock.insertBefore(marker, firstBlock.firstChild)
+          }
         }
       }
     })
