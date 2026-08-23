@@ -600,8 +600,8 @@ function normalizeLists(root, doc, forCopy = false) {
 
       wrapper.appendChild(item)
 
-      // 复制时把兜底 marker 插入到第一个块级子元素（通常是 <p>）的最前面，
-      // 让编号和内容同属一个段落，避免微信编辑器把 marker 和内容拆成两行。
+      // 复制时把列表项整体收敛为一个 <p> 段落（编号 + 内容同处一段），
+      // 避免微信编辑器把 marker 与内容拆成两行。
       if (forCopy) {
         const marker = item.querySelector(':scope > span[data-bullet]')
         if (marker) {
@@ -613,12 +613,19 @@ function normalizeLists(root, doc, forCopy = false) {
           marker.style.display = 'inline'
           marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
           marker.style.lineHeight = 'inherit'
+        }
 
-          // 把 marker 挪到第一个块级子元素开头；没有块级子元素则保留在原地
-          const firstBlock = item.querySelector(':scope > p, :scope > section, :scope > div')
-          if (firstBlock && firstBlock !== marker) {
-            firstBlock.insertBefore(marker, firstBlock.firstChild)
-          }
+        // 找第一个块级子元素；没有则新建 <p> 把全部子内容包进去
+        let block = item.querySelector(':scope > p, :scope > section, :scope > div')
+        if (!block) {
+          block = doc.createElement('p')
+          while (item.firstChild) block.appendChild(item.firstChild)
+          item.appendChild(block)
+        } else if (block !== marker) {
+          // 把 marker 之外的其余子节点全部并入该块级元素，成为同段内容
+          const rest = []
+          Array.from(item.childNodes).forEach(n => { if (n !== block) rest.push(n) })
+          rest.forEach(n => block.appendChild(n))
         }
       }
     })
