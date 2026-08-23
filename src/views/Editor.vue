@@ -565,9 +565,10 @@ function applyThemeRulesToDom(container, rules, doc) {
   })
 }
 
-// 列表复制优化：把 ul/ol/li 转成 <section> 段落序列（微信对 section 兼容性好），
-// 并把兜底 marker span 改成 inline，确保编号/图标与内容在同一行，不被微信拆段。
-function normalizeLists(root, doc) {
+// 列表复制优化：把 ul/ol/li 转成 <section> 段落序列（微信对 section 兼容性好）。
+// forCopy=true 时把兜底 marker span 改成 inline，让编号/图标与内容在同一行，不被微信拆段；
+// forCopy=false 时保留预览样式（absolute marker），保证编辑器预览效果。
+function normalizeLists(root, doc, forCopy = false) {
   root.querySelectorAll('ul, ol').forEach(listEl => {
     const wrapper = doc.createElement('div')
     // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style 与 padding-left
@@ -597,21 +598,23 @@ function normalizeLists(root, doc) {
       if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = '10px'
       while (li.firstChild) item.appendChild(li.firstChild)
 
-      // 兜底 marker 在预览区是 absolute；复制时改成 inline，
-      // 让它和后面的文本同处一个段落，微信编辑器不会拆行。
-      const marker = item.querySelector(':scope > span[data-bullet]')
-      if (marker) {
-        marker.style.removeProperty('position')
-        marker.style.removeProperty('left')
-        marker.style.removeProperty('top')
-        marker.style.removeProperty('min-width')
-        marker.style.removeProperty('text-align')
-        marker.style.display = 'inline'
-        marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
-        marker.style.lineHeight = 'inherit'
-      }
-
       wrapper.appendChild(item)
+
+      // 复制时把兜底 marker 改成 inline，让它和文本同处一个段落，
+      // 避免微信编辑器把 absolute marker 和内容拆成两行。
+      if (forCopy) {
+        const marker = item.querySelector(':scope > span[data-bullet]')
+        if (marker) {
+          marker.style.removeProperty('position')
+          marker.style.removeProperty('left')
+          marker.style.removeProperty('top')
+          marker.style.removeProperty('min-width')
+          marker.style.removeProperty('text-align')
+          marker.style.display = 'inline'
+          marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
+          marker.style.lineHeight = 'inherit'
+        }
+      }
     })
 
     if (listEl.parentNode) listEl.parentNode.replaceChild(wrapper, listEl)
@@ -653,8 +656,8 @@ function inlineThemeToSection(doc, themeCssText) {
   clone.style.setProperty('width', '100%')
   clone.style.setProperty('box-sizing', 'border-box')
 
-  // 列表转 div（预览与复制一致）
-  normalizeLists(clone, doc)
+  // 列表转 div（预览，保留 absolute marker 样式）
+  normalizeLists(clone, doc, false)
 
   const result = clone.outerHTML
   doc.body.removeChild(clone)
@@ -843,7 +846,7 @@ async function buildInlinedHtml() {
   clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
 
   // 列表复制优化：转成 section 段落序列，marker 改为 inline 避免微信拆行
-  normalizeLists(clone, doc)
+  normalizeLists(clone, doc, true)
 
   // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
   clone.querySelectorAll('[data-tpl]').forEach(el => {
