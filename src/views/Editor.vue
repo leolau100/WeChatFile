@@ -622,9 +622,10 @@ function normalizeLists(root, doc, forCopy = false) {
           while (item.firstChild) block.appendChild(item.firstChild)
           item.appendChild(block)
         } else if (block !== marker) {
-          // 把 marker 之外的其余子节点全部并入该块级元素，成为同段内容
+          // 把 marker 插入该块级元素最前面，其余子节点依次并入，成为同段内容
+          block.insertBefore(marker, block.firstChild)
           const rest = []
-          Array.from(item.childNodes).forEach(n => { if (n !== block) rest.push(n) })
+          Array.from(item.childNodes).forEach(n => { if (n !== block && n !== marker) rest.push(n) })
           rest.forEach(n => block.appendChild(n))
         }
       }
