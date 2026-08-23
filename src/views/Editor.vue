@@ -565,28 +565,41 @@ function applyThemeRulesToDom(container, rules, doc) {
   })
 }
 
-// 列表复制优化：保留 ul/ol/li 标签（微信编辑器原生支持列表），
-// 仅清理 list-style 并把兜底 marker span 改成 inline 显示，
-// 避免 absolute 定位的 marker 在微信编辑器里与内容被拆成两段。
-function normalizeLists(root) {
+// 列表复制优化：把 ul/ol/li 转成 <section> 段落序列（微信对 section 兼容性好），
+// 并把兜底 marker span 改成 inline，确保编号/图标与内容在同一行，不被微信拆段。
+function normalizeLists(root, doc) {
   root.querySelectorAll('ul, ol').forEach(listEl => {
-    // 去掉 list-style / padding-left 等可能冲突的声明，交给 li 自己控制
+    const wrapper = doc.createElement('div')
+    // 继承 ul/ol 自身的内联布局样式（margin/padding），去掉 list-style 与 padding-left
+    Array.from(listEl.attributes).forEach(a => {
+      if (a.name === 'style') return
+      wrapper.setAttribute(a.name, a.value)
+    })
     const listStyle = (listEl.getAttribute('style') || '')
       .replace(/list-style[^;]*;?/gi, '')
       .replace(/padding-left[^;]*;?/gi, '')
       .trim()
-    if (listStyle) listEl.setAttribute('style', listStyle)
-    else listEl.removeAttribute('style')
+    if (listStyle) wrapper.setAttribute('style', listStyle)
+    else wrapper.removeAttribute('style')
 
     Array.from(listEl.children).forEach(li => {
-      if (li.tagName !== 'LI') return
-      li.style.position = 'relative'
-      const pl = li.style.paddingLeft
-      if (!pl || parseFloat(pl) < 0.5) li.style.paddingLeft = '10px'
+      if (li.tagName !== 'LI') {
+        wrapper.appendChild(li)
+        return
+      }
+      const item = doc.createElement('div')
+      Array.from(li.attributes).forEach(a => {
+        if (a.name === 'class') return
+        item.setAttribute(a.name, a.value)
+      })
+      item.style.position = 'relative'
+      const pl = item.style.paddingLeft
+      if (!pl || parseFloat(pl) < 0.5) item.style.paddingLeft = '10px'
+      while (li.firstChild) item.appendChild(li.firstChild)
 
-      // 兜底 marker 在预览区是 absolute，便于对齐；复制时改成 inline，
-      // 让它和后面的文本同处一个段落，微信不会拆行。
-      const marker = li.querySelector(':scope > span[data-bullet]')
+      // 兜底 marker 在预览区是 absolute；复制时改成 inline，
+      // 让它和后面的文本同处一个段落，微信编辑器不会拆行。
+      const marker = item.querySelector(':scope > span[data-bullet]')
       if (marker) {
         marker.style.removeProperty('position')
         marker.style.removeProperty('left')
@@ -597,7 +610,11 @@ function normalizeLists(root) {
         marker.style.marginRight = listEl.tagName === 'OL' ? '6px' : '4px'
         marker.style.lineHeight = 'inherit'
       }
+
+      wrapper.appendChild(item)
     })
+
+    if (listEl.parentNode) listEl.parentNode.replaceChild(wrapper, listEl)
   })
 }
 
@@ -825,8 +842,8 @@ async function buildInlinedHtml() {
   const clone = section.cloneNode(true)
   clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
 
-  // 列表复制优化：保留 ul/ol/li，仅调整 marker 为 inline 避免微信拆行
-  normalizeLists(clone)
+  // 列表复制优化：转成 section 段落序列，marker 改为 inline 避免微信拆行
+  normalizeLists(clone, doc)
 
   // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
   clone.querySelectorAll('[data-tpl]').forEach(el => {
