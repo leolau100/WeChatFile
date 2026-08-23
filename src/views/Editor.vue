@@ -179,6 +179,8 @@
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { marked } from 'marked'
+// 硬换行保留为 <br>，让每一行 > 引用都成为独立的新行
+marked.setOptions({ breaks: true, gfm: true })
 import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
 import SvgEffectsModal from '../components/SvgEffectsModal.vue'

@@ -107,6 +107,8 @@
 <script setup>
 import { ref, computed, watch, nextTick, onBeforeUnmount } from 'vue'
 import { marked } from 'marked'
+// 硬换行保留为 <br>，让每一行 > 引用都成为独立的新行
+marked.setOptions({ breaks: true, gfm: true })
 import { EditorView, keymap, lineNumbers, highlightActiveLine } from '@codemirror/view'
 import { EditorState } from '@codemirror/state'
 import { html } from '@codemirror/lang-html'
