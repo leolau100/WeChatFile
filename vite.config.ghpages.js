@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import { fileURLToPath, URL } from 'node:url'
 
 // 构建时记录部署时间（北京时间），每次 build 都会刷新
 const deployTime = new Date().toLocaleString('zh-CN', {
@@ -19,6 +20,11 @@ const deployTime = new Date().toLocaleString('zh-CN', {
 export default defineConfig({
   base: '/NiceWechatArticle/',
   plugins: [vue()],
+  resolve: {
+    alias: {
+      '@': fileURLToPath(new URL('./src', import.meta.url))
+    }
+  },
   define: {
     __DEPLOY_TIME__: JSON.stringify(deployTime)
   },
