@@ -185,6 +185,9 @@ import ThemeSelector from '../components/ThemeSelector.vue'
 import TemplateModal from '../components/TemplateModal.vue'
 import SvgEffectsModal from '../components/SvgEffectsModal.vue'
 import DonateModal from '../components/DonateModal.vue'
+// 与「一键复制」/接口共用同一套渲染逻辑，保证预览与输出同源
+// 仅引入 wechatifyDoc（本文件已有的 inlineThemeToSection / getThemeCss 同源复用，避免重名）
+import { wechatifyDoc } from '@/render'
 
 // Storage Keys
 const STORAGE_KEYS = {
@@ -853,121 +856,19 @@ async function updatePreview() {
 }
 
 // Build Inlined HTML for Copy
+// 复用 src/render 的完整序列：inlineThemeToSection → 重新解析 → wechatifyDoc
+// 与 renderWechatFragment / 接口输出完全同源（避免对未内联的预览 doc 直接兼容化导致丢样式）
 async function buildInlinedHtml() {
   const doc = previewIframeRef.value.contentDocument || previewIframeRef.value.contentWindow.document
-  const section = doc.body.querySelector('section')
-  if (!section) return doc.body.innerHTML
-
-  // ── 1. 克隆，删除预览专用元素 ──────────────────────────────────────────────
-  const clone = section.cloneNode(true)
-  clone.querySelectorAll('[data-preview-only]').forEach(el => el.remove())
-
-  // 列表复制优化：转成 section 段落序列，与预览共用同一结构
-  normalizeLists(clone, doc)
-
-  // ── 2. 清理内部容器 div（data-tpl 标记的脚手架层）────────────────────────
-  clone.querySelectorAll('[data-tpl]').forEach(el => {
-    const tplType = el.getAttribute('data-tpl')
-    if (tplType === 'header' || tplType === 'footer') {
-      const hasContent = el.children.length > 0 || el.textContent.trim() !== ''
-      if (!hasContent) { el.remove(); return }
-      el.style.removeProperty('outline')
-      el.style.removeProperty('outline-offset')
-      el.style.removeProperty('position')
-      el.style.removeProperty('padding-top')
-      if (!el.getAttribute('style')?.trim()) el.removeAttribute('style')
-    }
-    el.removeAttribute('class')
-    el.removeAttribute('data-tpl')
-  })
-
-  // ── 3. 继承属性下沉 ────────────────────────────────────────────────────────
-  // 微信会过滤 style 里含有 font-family 的 <div>（识别为继承容器）
-  // 把继承属性下沉到实际内容元素，容器只保留 padding / background-color
-  const INHERIT_PROPS = ['font-family', 'color', 'font-size', 'line-height', 'letter-spacing', 'text-align']
-  const CONTENT_TAGS = ['p', 'li', 'div', 'td', 'th', 'blockquote', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span']
-  clone.querySelectorAll('div, section').forEach(container => {
-    const styleStr = container.getAttribute('style') || ''
-    if (!styleStr.includes('padding') && !styleStr.includes('font-family')) return
-    const inherited = {}
-    INHERIT_PROPS.forEach(prop => {
-      const val = container.style.getPropertyValue(prop)
-      if (val) inherited[prop] = val
-    })
-    if (!Object.keys(inherited).length) return
-    CONTENT_TAGS.forEach(tag => {
-      container.querySelectorAll(tag).forEach(el => {
-        Object.entries(inherited).forEach(([prop, val]) => {
-          if (!el.style.getPropertyValue(prop)) el.style.setProperty(prop, val)
-        })
-      })
-    })
-    INHERIT_PROPS.forEach(prop => container.style.removeProperty(prop))
-  })
-
-  // ── 4. 把所有 <div> 替换成 <section>（微信支持 section，不支持 div）────────
-  // 保留所有属性（style 等），只换标签名
-  clone.querySelectorAll('div').forEach(div => {
-    const sec = doc.createElement('section')
-    // 复制所有属性
-    Array.from(div.attributes).forEach(attr => sec.setAttribute(attr.name, attr.value))
-    // 移入子节点
-    while (div.firstChild) sec.appendChild(div.firstChild)
-    div.parentNode.replaceChild(sec, div)
-  })
-
-  // ── 5. 解包微信不支持的其他块级标签（保留子内容）────────────────────────
-  // header/footer/nav/article/aside/figure/figcaption/main → 解包
-  const UNWRAP_TAGS = ['header', 'footer', 'nav', 'article', 'aside', 'figure', 'figcaption', 'main', 'details', 'summary']
-  UNWRAP_TAGS.forEach(tag => {
-    clone.querySelectorAll(tag).forEach(el => {
-      const parent = el.parentNode
-      while (el.firstChild) parent.insertBefore(el.firstChild, el)
-      parent.removeChild(el)
-    })
-  })
-
-  // ── 6. style 属性规范化（微信兼容性修复）──────────────────────────────────
-  clone.querySelectorAll('[style]').forEach(el => {
-    let s = el.getAttribute('style')
-    if (!s) return
-
-    // font-family 里的双引号 → 单引号（防止序列化成 &quot; 导致 style 解析失败）
-    s = s.replace(/font-family\s*:[^;]*/gi, m => m.replace(/"/g, "'"))
-
-    // background: <纯色> → background-color（微信不支持 background 简写作背景色）
-    s = s.replace(/(?<![a-z-])background\s*:\s*([^;]+)/gi, (match, val) => {
-      const v = val.trim()
-      if (/^(linear-gradient|radial-gradient|conic-gradient|url)/i.test(v)) return match
-      return `background-color: ${v}`
-    })
-
-    // 去掉微信完全不认的属性
-    const UNSUPPORTED = ['outline', 'outline-offset', 'box-shadow', 'transition', 'animation',
-      'transform', 'clip-path', 'filter', 'z-index', 'position', 'overflow',
-      'cursor', 'pointer-events', 'user-select', '-webkit-user-select']
-    UNSUPPORTED.forEach(prop => {
-      s = s.replace(new RegExp(`(?<![a-z-])${prop}\\s*:[^;]*(;|$)`, 'gi'), '')
-    })
-
-    // 清理多余空白和孤立分号
-    s = s.replace(/;+/g, ';').replace(/^\s*;|;\s*$/g, '').trim()
-
-    if (s) el.setAttribute('style', s)
-    else el.removeAttribute('style')
-  })
-
-  // ── 7. 去掉所有残留 class 属性 ────────────────────────────────────────────
-  clone.querySelectorAll('[class]').forEach(el => el.removeAttribute('class'))
-
-  // ── 8. 去掉所有 data-* 属性 ───────────────────────────────────────────────
-  clone.querySelectorAll('*').forEach(el => {
-    Array.from(el.attributes)
-      .filter(a => a.name.startsWith('data-'))
-      .forEach(a => el.removeAttribute(a.name))
-  })
-
-  return clone.outerHTML
+  if (!doc) return ''
+  // 克隆当前预览渲染结果到独立 doc，避免操作 iframe 文档
+  const workDoc = document.implementation.createHTMLDocument('')
+  workDoc.body.innerHTML = doc.body.innerHTML
+  const themeCssText = await getThemeCss(currentTheme.value)
+  const inlined = inlineThemeToSection(workDoc, themeCssText)
+  const outDoc = document.implementation.createHTMLDocument('')
+  outDoc.body.innerHTML = inlined
+  return wechatifyDoc(outDoc)
 }
 
 // Event Handlers

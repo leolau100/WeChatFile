@@ -334,7 +334,7 @@ function normalizeLists(root, doc) {
 }
 
 // 把主题 CSS 内联到 section（含 header / body / footer）
-function inlineThemeToSection(doc, themeCssText) {
+export function inlineThemeToSection(doc, themeCssText) {
   const section = doc.body.querySelector('section')
   if (!section) return doc.body.innerHTML
 
@@ -475,6 +475,21 @@ function wechatifySection(doc, section) {
 }
 
 /**
+ * 把已渲染（含 <section> 容器）的文档做微信兼容化处理
+ *
+ * 供 Editor.vue 复用：预览 iframe 的 contentDocument 已是完整渲染结果，
+ * 只需执行兼容化即可，避免重复 markdown 解析导致的不一致。
+ *
+ * @param {Document} doc 已包含 <body><section>...</section></body> 的文档
+ * @returns {string} 微信兼容 HTML 片段（<section>...</section>）
+ */
+export function wechatifyDoc(doc) {
+  const section = doc.body.querySelector('section')
+  if (!section) return doc.body.innerHTML
+  return wechatifySection(doc, section)
+}
+
+/**
  * 核心渲染：把 markdown + 模板 + 主题 渲染为微信兼容的 HTML 片段
  *
  * @param {Object} options
@@ -518,7 +533,7 @@ export async function renderWechatFragment(options = {}) {
   const section = outDoc.body.querySelector('section')
   if (!section) return inlined
 
-  return wechatifySection(outDoc, section)
+  return wechatifyDoc(outDoc)
 }
 
 /**
