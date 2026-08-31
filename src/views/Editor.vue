@@ -729,7 +729,7 @@ async function updatePreview() {
 <body>
   <section style="margin:0;padding:0;width:100%;box-sizing:border-box;">
     <div data-tpl="header" class="tpl-header-box" style="${headerWrapStyle}">${headerLabel}${headerHtml}</div>
-    <div data-tpl="body" class="theme-${currentTheme.value}" style="padding:0 15px;">${bodyHtml}</div>
+    <div data-tpl="body" class="theme-${currentTheme.value}" style="padding:0 15px;word-break:break-all;overflow-wrap:break-word;">${bodyHtml}</div>
     <div data-tpl="footer" class="tpl-footer-box" style="${footerWrapStyle}">${footerLabel}${footerHtml}</div>
   </section>
 </body></html>`

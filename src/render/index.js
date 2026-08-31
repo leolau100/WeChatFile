@@ -518,7 +518,7 @@ export async function renderWechatFragment(options = {}) {
 
   const rawHtml = `<section style="margin:0;padding:0;width:100%;box-sizing:border-box;">` +
     `<div data-tpl="header" class="tpl-header-box">${headerHtml}</div>` +
-    `<div data-tpl="body" class="theme-${theme}" style="padding:0 15px;">${bodyHtml}</div>` +
+    `<div data-tpl="body" class="theme-${theme}" style="padding:0 15px;word-break:break-all;overflow-wrap:break-word;">${bodyHtml}</div>` +
     `<div data-tpl="footer" class="tpl-footer-box">${footerHtml}</div>` +
     `</section>`
 
