@@ -1,0 +1,24 @@
+/* 主题：朴素报纸风（标题居中粗黑 / 衬线） */
+.theme-plain-news { background:#ffffff; color:#1a1a1a; font-family:Georgia,'Songti SC','SimSun',serif; }
+.theme-plain-news p { margin:1em 0;line-height:1.9;font-size:16px; }
+.theme-plain-news h1 { margin:1.4em 0 0.6em;font-weight:800;font-size:2em;color:#000;text-align:center; }
+.theme-plain-news h2 { margin:1.3em 0 0.5em;font-weight:700;font-size:1.5em;color:#000;text-align:center; }
+.theme-plain-news h3 { margin:1.2em 0 0.5em;font-weight:700;font-size:1.25em;color:#000; }
+.theme-plain-news h4 { margin:1em 0 0.4em;font-weight:700;font-size:1.1em;color:#000; }
+.theme-plain-news h5 { margin:1em 0 0.4em;font-weight:700;font-size:1em;color:#000; }
+.theme-plain-news h6 { margin:1em 0 0.3em;font-weight:700;font-size:0.95em;color:#333; }
+.theme-plain-news blockquote { margin:1.2em 0;padding:0.5em 1em;color:#444;border-left:4px solid #333;font-style:italic; }
+.theme-plain-news code { background:#f2f2f2;padding:2px 6px;font-family:Consolas,Monaco,monospace;font-size:13px;color:#900; }
+.theme-plain-news pre { background:#f2f2f2;padding:14px;overflow-x:auto;margin:1.4em 0;font-family:Consolas,Monaco,monospace;font-size:13px;color:#1a1a1a; }
+.theme-plain-news pre code { background:none;padding:0;color:inherit; }
+.theme-plain-news strong { font-weight:800;color:#000; }
+.theme-plain-news em { font-style:italic;color:#333; }
+.theme-plain-news a { color:#1a5fb4;text-decoration:underline; }
+.theme-plain-news ul { margin:1em 0;padding-left:1.8em;list-style:disc; }
+.theme-plain-news ol { margin:1em 0;padding-left:1.8em;list-style:decimal; }
+.theme-plain-news li { margin:0.4em 0;line-height:1.8;color:#1a1a1a; }
+.theme-plain-news hr { border:none;border-top:1px solid #999;margin:2em 0; }
+.theme-plain-news table { border-collapse:collapse;width:100%;margin:1.4em 0; }
+.theme-plain-news th { border:1px solid #999;padding:8px 12px;text-align:left;background:#f2f2f2;font-weight:700;color:#000; }
+.theme-plain-news td { border:1px solid #999;padding:8px 12px;text-align:left;color:#1a1a1a; }
+.theme-plain-news img { max-width:100%;height:auto;margin:1em 0; }

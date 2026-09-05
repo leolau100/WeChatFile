@@ -1,0 +1,24 @@
+/* 主题：极简灰阶（无背景块，最朴素） */
+.theme-plain-minimal { background:#ffffff; color:#333; font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif; }
+.theme-plain-minimal p { margin:1em 0;line-height:1.8;font-size:16px; }
+.theme-plain-minimal h1 { margin:1.5em 0 0.6em;font-weight:700;font-size:1.7em;color:#111; }
+.theme-plain-minimal h2 { margin:1.4em 0 0.6em;font-weight:700;font-size:1.4em;color:#111; }
+.theme-plain-minimal h3 { margin:1.2em 0 0.5em;font-weight:700;font-size:1.2em;color:#111; }
+.theme-plain-minimal h4 { margin:1.1em 0 0.4em;font-weight:700;font-size:1.1em;color:#111; }
+.theme-plain-minimal h5 { margin:1em 0 0.4em;font-weight:700;font-size:1em;color:#111; }
+.theme-plain-minimal h6 { margin:1em 0 0.3em;font-weight:700;font-size:0.95em;color:#666; }
+.theme-plain-minimal blockquote { margin:1.2em 0;padding-left:1em;color:#555;border-left:3px solid #ccc; }
+.theme-plain-minimal code { background:none;padding:0;font-family:Consolas,Monaco,monospace;font-size:13px;color:#c00; }
+.theme-plain-minimal pre { margin:1.4em 0;padding:12px;overflow-x:auto;font-family:Consolas,Monaco,monospace;font-size:13px;color:#333;background:none;border:1px solid #e0e0e0; }
+.theme-plain-minimal pre code { background:none;padding:0;color:inherit; }
+.theme-plain-minimal strong { font-weight:700;color:#111; }
+.theme-plain-minimal em { font-style:italic;color:#333; }
+.theme-plain-minimal a { color:#0066cc;text-decoration:underline; }
+.theme-plain-minimal ul { margin:1em 0;padding-left:1.8em;list-style:disc; }
+.theme-plain-minimal ol { margin:1em 0;padding-left:1.8em;list-style:decimal; }
+.theme-plain-minimal li { margin:0.4em 0;line-height:1.7;color:#333; }
+.theme-plain-minimal hr { border:none;border-top:1px solid #ddd;margin:2em 0; }
+.theme-plain-minimal table { border-collapse:collapse;width:100%;margin:1.4em 0; }
+.theme-plain-minimal th { border:1px solid #ddd;padding:8px 12px;text-align:left;background:#fafafa;font-weight:700;color:#111; }
+.theme-plain-minimal td { border:1px solid #ddd;padding:8px 12px;text-align:left;color:#333; }
+.theme-plain-minimal img { max-width:100%;height:auto;margin:1em 0; }

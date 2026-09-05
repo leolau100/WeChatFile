@@ -271,6 +271,7 @@ const themeFileMap = {
   'tech-dark':'themes/tech-dark.css','tech-purple':'themes/tech-purple.css',
   'vapor':'themes/vapor.css','vibrant':'themes/vibrant.css','wabi':'themes/wabi.css',
   'warm-orange':'themes/warm-orange.css','wechat-classic':'themes/wechat-classic.css',
+  'plain':'themes/plain.css','plain-doc':'themes/plain-doc.css','plain-minimal':'themes/plain-minimal.css','plain-news':'themes/plain-news.css','plain-serif':'themes/plain-serif.css',
 }
 
 // Theme CSS Cache
